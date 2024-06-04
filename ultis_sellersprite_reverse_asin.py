@@ -32,54 +32,53 @@ db_config = config.get_database_config()
 
 
 def fetch_asin_tokeyword(asin):
-    # conn = None
-    # try:
-    #     # Connect to your database
-    #     conn = psycopg2.connect(
-    #         dbname=db_config["dbname"],
-    #         user=db_config["user"],
-    #         password=db_config["password"],
-    #         host=db_config["host"],
-    #     )
-    #     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    #     # Execute a query
-    #     cur.execute(
-    #         """
-    #         WITH split_asins AS (
-    #             SELECT unnest(string_to_array(asin, ',')) AS asin_element
-    #             FROM reverse_product_lookup_helium
-    #         )
-    #         SELECT a.*
-    #         FROM products_smartscount a
-    #         LEFT JOIN products_relevant_smartscounts b
-    #         ON a.asin = b.asin_relevant AND a.sys_run_date = b.sys_run_date
-    #         WHERE a.sys_run_date = %s AND b.asin = %s
-    #         AND a.asin not in (select distinct asin_element from split_asins)
-    #         AND b.relevancy_score > 9
-    #         ORDER BY a.estimated_monthly_revenue DESC
-    #         LIMIT 10
-    #         """,
-    #         (
-    #             str(current_time_gmt7.strftime("%Y-%m-%d")),
-    #             asin,
-    #         ),
-    #     )
+    conn = None
+    try:
+        # Connect to your database
+        conn = psycopg2.connect(
+            dbname=db_config["dbname"],
+            user=db_config["user"],
+            password=db_config["password"],
+            host=db_config["host"],
+        )
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        # Execute a query
+        cur.execute(
+            """
+            WITH split_asins AS (
+                SELECT unnest(string_to_array(asin, ',')) AS asin_element
+                FROM reverse_product_lookup_helium
+            )
+            SELECT a.*
+            FROM products_smartscount a
+            LEFT JOIN products_relevant_smartscounts b
+            ON a.asin = b.asin_relevant AND a.sys_run_date = b.sys_run_date
+            WHERE a.sys_run_date = %s AND b.asin = %s 
+            AND a.asin not in (select distinct asin_element from split_asins)
+            AND b.relevancy_score > 8
+            ORDER BY a.estimated_monthly_revenue DESC
+            LIMIT 10
+            """,
+            (
+                str(current_time_gmt7.strftime("%Y-%m-%d")),
+                asin,
+            ),
+        )
 
-    #     # Fetch all results
-    #     results = cur.fetchall()
-    #     # Extract the asin values from the results
-    #     asins = [item["asin"] for item in results]
-    #     # subset_size = 10
-    #     subsets = ", ".join(asins)
-    #     asin_parent = asin
-    #     return asin_parent, subsets
-    # except Exception as e:
-    #     print(f"Database error: {e}")
-    #     return []
-    # finally:
-    #     if conn:
-    #         conn.close()
-    return asin, asin
+        # Fetch all results
+        results = cur.fetchall()
+        # Extract the asin values from the results
+        asins = [item["asin"] for item in results]
+        # subset_size = 10
+        subsets = ", ".join(asins)
+        asin_parent = asin
+        return asin_parent, subsets
+    except Exception as e:
+        print(f"Database error: {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
 
 
 def captcha_solver(driver, chrome_options, API="7f97e318653cc85d2d7bc5efdfb1ea9f"):
@@ -142,77 +141,51 @@ def wait_for_download_complete(download_dir, keyword, timeout=60):
     return None
 
 
-def scrap_helium_asin_keyword(
+def scrap_sellersprite_asin_keyword(
     driver,
     asin,
     download_dir,
-    username="forheliumonly@gmail.com",
-    password="qz6EvRm65L3HdjM2!!@#$",
+    username="uty.tra@thebargainvillage.com",
+    password="2292186@Uty",
 ):
     asin_parent, subsets = asin
-    # Open Helium10
-    driver.get("https://members.helium10.com/cerebro?accountId=1544526096")
+    # Open Seller Sprite
+    driver.get("https://www.sellersprite.com/w/user/login")
     wait = WebDriverWait(driver, 30)
     print("login")
 
     # Login process
     try:
-        username_field = wait.until(
-            EC.visibility_of_element_located((By.ID, "loginform-email"))
+        # Wait until the username field is visible and clickable
+        username_field = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.NAME, "email"))
         )
         username_field.send_keys(username)
-        password_field = driver.find_element(By.ID, "loginform-password")
+
+        # Wait until the password field is visible and clickable
+        password_field = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.NAME, "password_otn"))
+        )
         password_field.send_keys(password)
-        # Find the button by its class name (assuming class name is unique enough here)
-        status_ready = False
-        status_login = False
-        while not status_login:
-            while not status_ready:
-                try:
-                    status_element = wait.until(
-                        EC.visibility_of_element_located(
-                            (By.CSS_SELECTOR, "div.cm-addon-inner span")
-                        )
-                    )
-                    status_text = status_element.text
-                    if status_text == "Ready!":
-                        print("Status: Ready")
-                        status_ready = True
-                    elif status_text == "In Process...":
-                        print("Status: In Progress")
-                    else:
-                        print("Status: Unknown -", status_text)
-                        time.sleep(1)
-                except:
-                    print("Error checking status")
-                    time.sleep(1)
-                    login_button = driver.find_element(By.CLASS_NAME, "btn-secondary")
-                    driver.execute_script("arguments[0].click();", login_button)
-                if status_ready == True:
-                    status_login = True
-                else:
-                    try:
-                        # Wait up to 10 seconds for the element to be present and visible
-                        element = WebDriverWait(driver, 10).until(
-                            EC.visibility_of_element_located(
-                                (
-                                    By.XPATH,
-                                    "//a[@title='Dashboard' and @href='https://members.helium10.com/?accountId=1544526096']",
-                                )
-                            )
-                        )
-                        print("Element is visible")
-                        status_login = True
-                    except:
-                        print("Element not visible")
+
+        # Ensure the button is clickable and then click
+        login_button = WebDriverWait(driver, 10).until(
+            EC.element_to_be_clickable((By.CLASS_NAME, "login_btn"))
+        )
+
+        # Scroll to the button if it's not fully visible
+        driver.execute_script("arguments[0].scrollIntoView(true);", login_button)
+
+        # Click the login button
+        login_button.click()
+
+        # Wait for some time to observe the result
         time.sleep(2)
-        login_button = driver.find_element(By.CLASS_NAME, "btn-secondary")
-        driver.execute_script("arguments[0].click();", login_button)
-        time.sleep(2)
+
     except Exception as e:
         print(f"Error during login: {e}")
         traceback.print_exc()
-        return
+        raise e
 
     # driver.refresh("https://members.helium10.com/cerebro?accountId=1544526096")
     # time.sleep(5)
@@ -393,21 +366,40 @@ def scrap_helium_asin_keyword(
             "organic_rank",
             "sys_run_date",
         ]
-        print(data_df.columns)
         data = data_df
         # [columns_to_extract]
         data.columns = headers
 
         # Convert search_volume to numeric, forcing errors to NaN
-        data["organic_rank"] = pd.to_numeric(data["organic_rank"], errors="coerce")
+        data["aba_total_click_share"] = pd.to_numeric(
+            data["aba_total_click_share"], errors="coerce"
+        )
+        data["search_volume"] = pd.to_numeric(data["search_volume"], errors="coerce")
+        data["keyword_sales"] = pd.to_numeric(data["keyword_sales"], errors="coerce")
+        data["search_volume_trend"] = pd.to_numeric(
+            data["search_volume_trend"], errors="coerce"
+        )
+        data["competing_products"] = pd.to_numeric(
+            data["competing_products"], errors="coerce"
+        )
         # Apply the filters
-        filtered_data = data
+        filtered_data = data[
+            (data["aba_total_click_share"].fillna(0.0) > 0)
+            & (data["search_volume"] >= 1000)
+            & (data["keyword_sales"] >= 100)
+            & (data["search_volume_trend"] > 0)
+            & (data["competing_products"] < 35)
+        ]
 
         # Insert ASIN and ASIN Parent columns
         filtered_data.insert(0, "asin", "")
         filtered_data.insert(0, "asin_parent", "")
         try:
-            rows_list = filtered_data.replace({np.nan: None}).to_dict(orient="records")
+            rows_list = (
+                filtered_data.replace({np.nan: None})
+                .replace({"-": None})
+                .to_dict(orient="records")
+            )
 
             for row_dict in rows_list:
                 row_dict["asin"] = str(subsets)
