@@ -32,6 +32,7 @@ from ultis_scrap_helium_cerebro import (
     captcha_solver,
     scrap_helium_asin_keyword,
 )
+from ultis_sellersprite_reverse_asin import scrap_sellersprite_asin_keyword
 
 # Initialize Supabase client
 supabase = config.supabase
@@ -80,10 +81,7 @@ def fetch_existing_relevant_asin_main():
         )
         cur = conn.cursor()
         # Execute a query
-        cur.execute(
-            "SELECT distinct asin_relevant FROM products_relevant_smartscounts a where a.sys_run_date = %s ",
-            (str(current_time_gmt7.strftime("%Y-%m-%d")),),
-        )
+        cur.execute("SELECT distinct asin FROM reverse_product_lookup_helium_2")
 
         # Fetch all results
         asins = cur.fetchall()
@@ -146,7 +144,7 @@ WITH keyword_phrases AS (
         asin_parent,
         STRING_AGG(keyword_phrase, ', ') AS concatenated_keywords
     FROM 
-        reverse_product_lookup_helium
+        reverse_product_lookup_helium_2
     GROUP BY 
         asin_parent
 )
@@ -200,42 +198,56 @@ def clear_session_and_refresh(driver):
 
 def start_driver(asin):
     # chromedriver_path = os.path.join(dir_path, 'chromedriver.exe')  # Ensure this path is correct
+
     chrome_service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
     user_asins = []
+    asin_to_keywords2 = []
     try:
-        while True:
-            user_asins = [
-                asin for asin in user_asins if not fetch_existing_relevant_asin_main()
-            ]
-            if user_asins:
-                smartscouts_next_login(driver, username, password)
-                scrap_data_smartcount_relevant_product(driver, asin, download_dir)
-                time.sleep(5)
+        while asin:
+            # user_asins = [
+            #     asin1 for asin1 in asin if not fetch_existing_relevant_asin_main()
+            # ]
+            # if user_asins:
+            #     smartscouts_next_login(driver, username, password)
+            #     scrap_data_smartcount_relevant_product(driver, asin, download_dir)
+            #     time.sleep(5)
 
-            relevant_asins = fetch_existing_relevant_asin(asin)
-            if relevant_asins:
-                scrap_data_smartcount_product(driver, relevant_asins, download_dir)
-            asin_to_keywords = fetch_asin_tokeyword(asin)
-            if asin_to_keywords:
-                captcha_solver(driver, chrome_options)
-                scrap_helium_asin_keyword(
-                    driver, fetch_asin_tokeyword(asin), download_dir
-                )
+            # relevant_asins = fetch_existing_relevant_asin(asin)
+            # if relevant_asins:
+            #     scrap_data_smartcount_product(driver, relevant_asins, download_dir)
+
+            # asin_to_keywords = fetch_asin_tokeyword(asin)
+
+            captcha_solver(driver, chrome_options)
+            scrap_helium_asin_keyword(driver, fetch_asin_tokeyword(asin), download_dir)
             driver.quit()
             update_keyword_auto_listing()
             time.sleep(10)
+
+            # scrap_sellersprite_asin_keyword(
+            #     driver, fetch_asin_tokeyword(asin), download_dir
+            # )
 
     finally:
         driver.quit()
 
 
 def main(asins):
-    with Pool(processes=len(asins)) as pool:
+    # for asin in asins:
+    with Pool(processes=3) as pool:
         pool.map(start_driver, asins)
+        # start_driver(asin)
 
 
 if __name__ == "__main__":
     # Example list of ASINs input by the user
     user_asins = get_asin_auto_listing_table()
-    main(user_asins)
+    asin_to_keywords2 = [
+        asin1
+        for asin1 in user_asins
+        if asin1 not in fetch_existing_relevant_asin_main()
+    ]
+    # get_asin_auto_listing_table()
+    if asin_to_keywords2:
+        main(asin_to_keywords2)
