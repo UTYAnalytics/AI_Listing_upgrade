@@ -261,8 +261,8 @@ def listing(session_id):
 
     formatted_results = ""
     for result in results:
-        formatted_results += f"Title: {result['title']}\n"
-        formatted_results += f"Description: {result['description']}\n\n"
+        formatted_results += f"\n\nTitle: {result['title']}\n\n"
+        formatted_results += f"\n\nDescription: {result['description']}\n\n"
 
     return formatted_results
 
