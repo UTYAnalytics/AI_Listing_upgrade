@@ -155,7 +155,7 @@ def upload_file(capture_key: bool = True):
     return file
 
 
-def save_to_supabase(row,at_session):
+def save_to_supabase(row, at_session):
     table = "auto_listing_table"
     row = row[headers].copy()
     row["sys_run_date"] = row["sys_run_date"].apply(
@@ -192,7 +192,7 @@ def execute(df):
                 df["session_id"] = at_session
                 df = df[headers]
                 st.success(f"Preprocess data")
-                save_to_supabase(df,at_session)
+                save_to_supabase(df, at_session)
                 user_asins = df["asin"]
                 # get_asin_auto_listing_table()
                 asin_to_keywords2 = [
@@ -209,7 +209,14 @@ def execute(df):
                                 success = main(asin_to_keywords2)
                                 if success:
                                     formatted_results = listing(at_session)
-                                    st.text_area("Results", formatted_results)
+                                    st.markdown(
+                                        f"""
+                                            <div style="width: 1500px; height: 3000px; overflow-y: scroll; background-color: #f0f0f0; border: 1px solid #ccc; padding: 10px;">
+                                                {formatted_results}
+                                            </div>
+                                            """,
+                                        unsafe_allow_html=True,
+                                    )
                                 else:
                                     st.error("An error occurred during the process.")
                             except Exception as e:
@@ -217,7 +224,14 @@ def execute(df):
                 while True:
                     if not get_keyword_session(at_session).empty:
                         formatted_results = listing(at_session)
-                        st.text_area("Results", formatted_results)
+                        st.markdown(
+                            f"""
+                            <div style="width: 1400px; height: 3000px; overflow-y: scroll; background-color: #f0f0f0; border: 1px solid #ccc; padding: 10px;">
+                                {formatted_results}
+                            </div>
+                            """,
+                            unsafe_allow_html=True,
+                        )
                         break
 
 
