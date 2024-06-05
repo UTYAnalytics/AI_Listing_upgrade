@@ -186,7 +186,8 @@ def scrap_helium_asin_keyword(
                 except:
                     print("Error checking status")
                     time.sleep(1)
-                    login_button = driver.find_element(By.CLASS_NAME, "btn-secondary")
+                    login_button = WebDriverWait(driver, 3000000).until(
+                            EC.visibility_of_element_located((By.CLASS_NAME, "btn-secondary")))
                     driver.execute_script("arguments[0].click();", login_button)
                 if status_ready == True:
                     status_login = True
@@ -206,7 +207,8 @@ def scrap_helium_asin_keyword(
                     except:
                         print("Element not visible")
         time.sleep(2)
-        login_button = driver.find_element(By.CLASS_NAME, "btn-secondary")
+        login_button =  WebDriverWait(driver, 3000000).until(
+                            EC.visibility_of_element_located((By.CLASS_NAME, "btn-secondary")))
         driver.execute_script("arguments[0].click();", login_button)
         time.sleep(2)
     except Exception as e:

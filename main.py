@@ -222,7 +222,7 @@ def start_driver(asin):
             captcha_solver(driver, chrome_options)
             scrap_helium_asin_keyword(driver, fetch_asin_tokeyword(asin), download_dir)
             driver.quit()
-            update_keyword_auto_listing()
+            # update_keyword_auto_listing()
             time.sleep(10)
 
             # scrap_sellersprite_asin_keyword(
@@ -235,7 +235,7 @@ def start_driver(asin):
 
 def main(asins):
     # for asin in asins:
-    with Pool(processes=3) as pool:
+    with Pool(processes=2) as pool:
         pool.map(start_driver, asins)
         # start_driver(asin)
 
