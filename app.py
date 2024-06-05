@@ -155,13 +155,13 @@ def upload_file(capture_key: bool = True):
     return file
 
 
-def save_to_supabase(row):
+def save_to_supabase(row,at_session):
     table = "auto_listing_table"
     row = row[headers].copy()
     row["sys_run_date"] = row["sys_run_date"].apply(
         lambda x: x.strftime("%Y-%m-%d %H:%M:%S")
     )
-    st.write(row)
+    # st.write(row)
     extract_columns = [col for col in headers if col != "id"]
     try:
         # Convert rows to list of dictionaries and handle NaN values
@@ -171,6 +171,7 @@ def save_to_supabase(row):
             {column: row[column] for column in extract_columns} for row in rows_list
         ]
         response = supabase.table(f"{table}").insert(rows_to_insert).execute()
+        st.write(get_keyword_session(at_session))
         if hasattr(response, "error") and response.error is not None:
             raise Exception(f"Error inserting rows: {response.error}")
         st.success(f"Rows inserted successfully to Database")
@@ -191,7 +192,7 @@ def execute(df):
                 df["session_id"] = at_session
                 df = df[headers]
                 st.success(f"Preprocess data")
-                save_to_supabase(df)
+                save_to_supabase(df,at_session)
                 user_asins = df["asin"]
                 # get_asin_auto_listing_table()
                 asin_to_keywords2 = [
@@ -201,19 +202,18 @@ def execute(df):
                 ]
                 # get_asin_auto_listing_table()
                 if asin_to_keywords2:
-                    st.spinner("Processing...")
-                    success = False
-                    while not success:
-                        try:
-                            st.spinner("Processing...")
-                            success = main(asin_to_keywords2)
-                            if success:
-                                formatted_results = listing(at_session)
-                                st.text_area("Results", formatted_results)
-                            else:
-                                st.error("An error occurred during the process.")
-                        except Exception as e:
-                            st.error(f"An error occurred: {e}")
+                    with st.spinner("Processing..."):
+                        success = False
+                        while not success:
+                            try:
+                                success = main(asin_to_keywords2)
+                                if success:
+                                    formatted_results = listing(at_session)
+                                    st.text_area("Results", formatted_results)
+                                else:
+                                    st.error("An error occurred during the process.")
+                            except Exception as e:
+                                st.error(f"An error occurred: {e}")
                 while True:
                     if not get_keyword_session(at_session).empty:
                         formatted_results = listing(at_session)
@@ -446,20 +446,14 @@ def clear_session_and_refresh(driver):
 
 
 def start_driver(asin):
-    # chromedriver_path = os.path.join(dir_path, 'chromedriver.exe')  # Ensure this path is correct
-
     chrome_service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
-    user_asins = []
-    asin_to_keywords2 = []
     try:
-
         captcha_solver(driver, chrome_options)
         scrap_helium_asin_keyword(driver, fetch_asin_tokeyword(asin), download_dir)
         driver.quit()
         update_keyword_auto_listing()
         time.sleep(10)
-
     finally:
         driver.quit()
 
@@ -468,10 +462,11 @@ def main(asins):
     try:
         with Pool(processes=3) as pool:
             pool.map(start_driver, asins)
-        return True  # Return True if the operation is successful
+        return True
     except Exception as e:
         print(f"An error occurred: {e}")
-        return False  # Return False if an exception occurs
+        traceback.print_exc()
+        return False
 
 
 if __name__ == "__main__":

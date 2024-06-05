@@ -9,26 +9,30 @@ from datetime import datetime
 
 GROQ_API_KEY = "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"
 
+
 class AILising:
-    '''
+    """
     This class is used to get response from Groq API
-    '''
+    """
+
     def __init__(self) -> None:
         # Initialize API KEY
         self.GROQ_API_KEY = GROQ_API_KEY
 
     def load_model(self):
         "Load the model from the Langchain-Groq"
-        self.chat = ChatGroq(temperature=0,
-                             groq_api_key=self.GROQ_API_KEY, 
-                             model_name="llama3-8b-8192")
+        self.chat = ChatGroq(
+            temperature=0, groq_api_key=self.GROQ_API_KEY, model_name="llama3-8b-8192"
+        )
 
-    def get_prompt(self, 
-                   product_name: str,
-                   pack: str,
-                   organic_keys: List[str], 
-                   auto_keys: List[str],
-                   customers: List[str],):
+    def get_prompt(
+        self,
+        product_name: str,
+        pack: str,
+        organic_keys: List[str],
+        auto_keys: List[str],
+        customers: List[str],
+    ):
         "Build the prompt template"
 
         system = "You are doing the role of an Amazon Product Listing expert"
@@ -68,31 +72,39 @@ class AILising:
 
                     ALL OF THE NOTES NEED TO BE SKIPPED
                 """
-        self.prompt = ChatPromptTemplate.from_messages([("system", system), ("human", human)])
+        self.prompt = ChatPromptTemplate.from_messages(
+            [("system", system), ("human", human)]
+        )
 
-    def get_response(self, 
-                     product_name: str,
-                     pack: str,
-                     organic_keys: List[str], 
-                     auto_keys: List[str],
-                     customers: List[str],
-                     ) -> Dict[str, str]:
+    def get_response(
+        self,
+        product_name: str,
+        pack: str,
+        organic_keys: List[str],
+        auto_keys: List[str],
+        customers: List[str],
+    ) -> Dict[str, str]:
         "Get the response from Groq API"
         self.load_model()
-        self.get_prompt(product_name=product_name, 
-                        pack=pack,
-                        organic_keys=organic_keys, 
-                        auto_keys=auto_keys,
-                        customers=customers)
+        self.get_prompt(
+            product_name=product_name,
+            pack=pack,
+            organic_keys=organic_keys,
+            auto_keys=auto_keys,
+            customers=customers,
+        )
         self.chain = self.prompt | self.chat
-        self.result = self.chain.invoke({"product_name": product_name,
-                                         "pack": pack,
-                                         "organic_keys": organic_keys,
-                                         "auto_keys": auto_keys,
-                                         "customers": customers,
-                                        })
+        self.result = self.chain.invoke(
+            {
+                "product_name": product_name,
+                "pack": pack,
+                "organic_keys": organic_keys,
+                "auto_keys": auto_keys,
+                "customers": customers,
+            }
+        )
         return self.parse_result(self.result.content)
-    
+
     def parse_result(self, content: str) -> Dict[str, str]:
         "Parse the result to extract title and description"
         try:
@@ -127,7 +139,18 @@ class AILising:
             )
             # Fetch all results
             rows = cur.fetchall()
-            headers = ["id", "sys_run_date", "asin", "name", "customer", "insert_date", "keyword", "pack", "session_id", "organic_keywords"]
+            headers = [
+                "id",
+                "sys_run_date",
+                "asin",
+                "name",
+                "customer",
+                "insert_date",
+                "keyword",
+                "pack",
+                "session_id",
+                "organic_keywords",
+            ]
             df = pd.DataFrame(rows, columns=headers)
             return df
         except Exception as e:
@@ -136,7 +159,7 @@ class AILising:
         finally:
             if conn:
                 conn.close()
-    
+
     def process_data(self, session_id: str) -> List[Dict[str, str]]:
         "Process data to use in get_response for all rows"
         df = self.fetch_data(session_id)
@@ -152,26 +175,30 @@ class AILising:
             auto_keys = row["keyword"].split(", ")
             customers = row["customer"].split(", ")
 
-            result = self.get_response(product_name=product_name,
-                                       pack=pack,
-                                       organic_keys=organic_keys,
-                                       auto_keys=auto_keys,
-                                       customers=customers)
-            results.append({
-                "id": row["id"],
-                "sys_run_date": row["sys_run_date"],
-                "asin": row["asin"],
-                "name": row["name"],
-                "customer": row["customer"],
-                "insert_date": row["insert_date"],
-                "keyword": row["keyword"],
-                "pack": row["pack"],
-                "session_id": row["session_id"],
-                "organic_keywords": row["organic_keywords"],
-                "title": result["title"],
-                "description": result["description"]
-            })
-        
+            result = self.get_response(
+                product_name=product_name,
+                pack=pack,
+                organic_keys=organic_keys,
+                auto_keys=auto_keys,
+                customers=customers,
+            )
+            results.append(
+                {
+                    "id": row["id"],
+                    "sys_run_date": row["sys_run_date"],
+                    "asin": row["asin"],
+                    "name": row["name"],
+                    "customer": row["customer"],
+                    "insert_date": row["insert_date"],
+                    "keyword": row["keyword"],
+                    "pack": row["pack"],
+                    "session_id": row["session_id"],
+                    "organic_keywords": row["organic_keywords"],
+                    "title": result["title"],
+                    "description": result["description"],
+                }
+            )
+
         return results
 
     def upsert_results(self, results: List[Dict[str, str]]):
@@ -204,13 +231,24 @@ class AILising:
                         session_id = EXCLUDED.session_id,
                         organic_keywords = EXCLUDED.organic_keywords;
                     """,
-                    (result["id"], result["sys_run_date"], result["asin"], result["name"], result["customer"],
-                     result["insert_date"], result["keyword"], result["pack"], result["session_id"],
-                     result["organic_keywords"], result["title"], result["description"])
+                    (
+                        result["id"],
+                        result["sys_run_date"],
+                        result["asin"],
+                        result["name"],
+                        result["customer"],
+                        result["insert_date"],
+                        result["keyword"],
+                        result["pack"],
+                        result["session_id"],
+                        result["organic_keywords"],
+                        result["title"],
+                        result["description"],
+                    ),
                 )
             conn.commit()
-        except Exception as e:
-            st.error(f"Database error: {e}")
+        # except Exception as e:
+        # st.error(f"Database error: {e}")
         finally:
             if conn:
                 conn.close()
@@ -220,21 +258,20 @@ def listing(session_id):
     ai_system = AILising()
     results = ai_system.process_data(session_id=session_id)
     ai_system.upsert_results(results)
-    
+
     formatted_results = ""
     for result in results:
         formatted_results += f"Title: {result['title']}\n"
         formatted_results += f"Description: {result['description']}\n\n"
-    
-    return formatted_results
 
+    return formatted_results
 
 
 # Example usage
 # if __name__ == '__main__':
 #     session_id = "decfbc45-e13c-4565-bcd1-970303c69bee"
 #     results = listing(session_id)
-    
+
 #     with open("output.txt", "w", encoding="utf-8") as f:
 #         for result in results:
 #             f.write(f"Title: {result['title']}\n")
