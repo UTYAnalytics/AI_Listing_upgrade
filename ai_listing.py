@@ -67,10 +67,24 @@ class AILising:
                     ## Description: 
                         - description of the product, in bullet points, contains the best keyword list to increase the highest possibility of keyword search on Amazon
                         - description MUST adapt the style of sentences to target the group of customers on Amazon: {customers}.
-                    The return will be in MARKDOWN format.
-                    
-
+                    The return will be in MARKDOWN format. Each of bullet point MUST BE SEPARATED BY END OF PARAGRAPH.
                     ALL OF THE NOTES NEED TO BE SKIPPED
+
+                    Example:
+                    product_name: \'Amazin Choices Snack Viet'
+                    pack:  Pack of 4 (7.05oz)
+                    organic_keys: Snack Viet, Healthy Snack, Study Snack, Party Snack, Lotus Root Seaweed Flavor Snack
+                    auto_keys: Amazin Choices, Snack Viet, Healthy Snack, Study Snack, Party Snack, Lotus Root Seaweed Flavor Snack
+                    customers: gift for everyone
+                    ## Title: 
+                    Amazin Choices Snack Viet- Healthy Snack- Study Snack- Party Snack- An Delicious Vietnamese Lotus Root Seaweed Flavor Snack Variety Pack- Pack of 4 (7.05oz)
+
+                    ## Description:
+                    ✅ DELICIOUS VIETNAMESE SNACK: Indulge in the flavors of Vietnam with our Lotus Root Seaweed flavor Snack, a unique and exotic treat for your taste buds. Huong vi Viet Nam, an vat cu sen rong bien den tu Co do Hue, nang tam nong san Viet Nam vuon tam quoc te
+                    ✅ CRISPY AND CRUNCHY: Enjoy the satisfying crunch of crispy seaweed flavor sheets and lotus root chips in every bite. Dac san Viet Nam voi huong vị truyen thong, mon ngon, vi rong bien
+                    ✅ HEALTHY OPTION: Our gourmet seaweed snack is a healthy, amazing choice for those looking for on-the-go snack. Giup cai thien giac ngu, an ngon, san pham chat luong cao tu Viet Nam
+                    ✅ SEA SALT PERFECTION: Seasoned with sea salt, our lotus seaweed flavor snacks provide the perfect balance of savory flavor. Gia vi Viet Nam, muoi an, rong bien, cu sen… su ket hop hai hoa giua sang tao va truyen thong
+                    ✅ PARTY SNACK FAVORITE: These lotus root crisps and seaweed chips are a hit at parties and gatherings, making them the ideal party snack. Qua Tet nguoi Viet, mon an tien loi, an voi uong tra Viet Nam tang vị thom cua sen    
                 """
         self.prompt = ChatPromptTemplate.from_messages(
             [("system", system), ("human", human)]
@@ -264,7 +278,7 @@ def listing(session_id):
         formatted_results += f"\n\nTitle: {result['title']}\n\n"
         formatted_results += f"\n\nDescription: {result['description']}\n\n"
 
-    return formatted_results
+    return results, formatted_results
 
 
 # Example usage
