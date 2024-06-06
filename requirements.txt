@@ -18,3 +18,4 @@ datetime
 supabase
 webdriver_manager
 streamlit.runtime.scriptrunner
+streamlit-aggrid
