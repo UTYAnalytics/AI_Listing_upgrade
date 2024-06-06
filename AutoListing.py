@@ -1,7 +1,5 @@
-import re
 import os
 import time
-import glob
 import uuid
 import psycopg2
 import tempfile
@@ -9,7 +7,6 @@ import psycopg2
 import traceback
 import traceback
 import numpy as np
-import unicodedata
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -24,8 +21,15 @@ from supabase import create_client, Client
 from config import config, format_header, get_newest_file
 from ultis_sellersprite_reverse_asin import scrap_sellersprite_asin_keyword
 from ultis_get_searchterm_smartsount import scrap_data_smartcount_relevant_product
-from ultis_get_product_smartscount import fetch_existing_relevant_asin, scrap_data_smartcount_product
-from ultis_scrap_helium_cerebro import fetch_asin_tokeyword, captcha_solver, scrap_helium_asin_keyword
+from ultis_get_product_smartscount import (
+    fetch_existing_relevant_asin,
+    scrap_data_smartcount_product,
+)
+from ultis_scrap_helium_cerebro import (
+    fetch_asin_tokeyword,
+    captcha_solver,
+    scrap_helium_asin_keyword,
+)
 
 from plotly.subplots import make_subplots
 from selenium.webdriver.common.by import By
@@ -228,7 +232,6 @@ def execute(df):
                         df_results = pd.DataFrame(list_results)
                         break
 
-
                 if not df_results.empty:
                     st.write(df_results)
 
@@ -261,6 +264,7 @@ def get_keyword_session(session_id):
     finally:
         if conn:
             conn.close()
+
 
 @st.cache_data
 def fetch_existing_asin_main():
@@ -308,35 +312,50 @@ def load_google_data():
     st.empty()
     return df
 
+
 def display_database(df):
-    list_date = df['sys_run_date'].unique()
+    list_date = df["sys_run_date"].unique()
     select_rows = pd.DataFrame([])
-    select = st.selectbox(label="Chọn ngày nhập dữ liệu", 
-                                          options = list_date,
-                                          key="select_date",)
-    
+    select = st.selectbox(
+        label="Chọn ngày nhập dữ liệu",
+        options=list_date,
+        key="select_date",
+    )
+
     if select:
-        st.session_state['selected_option'] = select
-        get_date = df.loc[df['sys_run_date']==st.session_state['selected_option']]
-        get_date = get_date[["asin", "name", "customer","pack", "organic_keywords", "keyword", "title","description" ]]
+        st.session_state["selected_option"] = select
+        get_date = df.loc[df["sys_run_date"] == st.session_state["selected_option"]]
+        get_date = get_date[
+            [
+                "asin",
+                "name",
+                "customer",
+                "pack",
+                "organic_keywords",
+                "keyword",
+                "title",
+                "description",
+            ]
+        ]
         select_rows = display_title_and_description(get_date)
         return select_rows
     else:
         return select_rows
 
+
 def display_title_and_description(df):
     # Configure grid options using GridOptionsBuilder
     builder = GridOptionsBuilder.from_dataframe(df)
     builder.configure_pagination(enabled=True)
-    builder.configure_selection(selection_mode='single', use_checkbox=False)
+    builder.configure_selection(selection_mode="single", use_checkbox=False)
     grid_options = builder.build()
 
     # Display AgGrid
-    
+
     return_value = AgGrid(df, gridOptions=grid_options, height=200)
     selected_rows = return_value["selected_rows"]
     return selected_rows
-   
+
 
 def call_app():
     set_page_info()
@@ -504,6 +523,5 @@ def main(asins):
 
 
 if __name__ == "__main__":
-    
 
     call_app()
