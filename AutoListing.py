@@ -19,33 +19,36 @@ import plotly.graph_objs as go
 from selenium import webdriver
 from ai_listing import listing
 from multiprocessing import Pool
-from datetime import datetime, timedelta
+from datetime import datetime
 from supabase import create_client, Client
-from config import config, format_header, get_newest_file
+from config import config, format_header, get_newest_file, trigger_github_workflow
 from ultis_sellersprite_reverse_asin import scrap_sellersprite_asin_keyword
 from ultis_get_searchterm_smartsount import scrap_data_smartcount_relevant_product
-from ultis_get_product_smartscount import fetch_existing_relevant_asin, scrap_data_smartcount_product
-from ultis_scrap_helium_cerebro import fetch_asin_tokeyword, captcha_solver, scrap_helium_asin_keyword
-
+from ultis_get_product_smartscount import (
+    fetch_existing_relevant_asin,
+    scrap_data_smartcount_product,
+)
+from ultis_scrap_helium_cerebro import (
+    fetch_asin_tokeyword,
+    captcha_solver,
+    scrap_helium_asin_keyword,
+)
+from main_process_data import fetch_existing_relevant_asin_main, main
 from plotly.subplots import make_subplots
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.common.exceptions import TimeoutException
 from webdriver_manager.chrome import ChromeDriverManager
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.action_chains import ActionChains
-from streamlit.runtime.scriptrunner.script_run_context import get_script_run_ctx
-
 from st_aggrid import AgGrid, GridOptionsBuilder
 
 pd.options.plotting.backend = "plotly"
 
 ## GLOBAL PARAMETERS
-SUPABASE_URL = "https://sxoqzllwkjfluhskqlfl.supabase.co"
-SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN4b3F6bGx3a2pmbHVoc2txbGZsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDIyODE1MTcsImV4cCI6MjAxNzg1NzUxN30.FInynnvuqN8JeonrHa9pTXuQXMp9tE4LO0g5gj0adYE"
-supabase: Client = create_client(SUPABASE_URL, SUPABASE_KEY)
+# Initialize Supabase client
+supabase = config.supabase
+db_config = config.get_database_config()
 
 GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1avXZgp1DIg7weP9GbDRrOH-T4SKvrfX-oJW4HE73aQE/export?format=csv&gid=0"
 
@@ -110,40 +113,6 @@ clock_style = """
 </style>
 """
 
-# Initialize Supabase client
-supabase = config.supabase
-
-# Get timezone offset and calculate current time in GMT+7
-current_time_gmt7 = config.current_time_gmt7
-
-# Get Selenium configuration
-chrome_options_list = config.get_selenium_config()
-
-# # Path to your extension .crx, extension_id file
-extension_path, extension_id = config.get_paths_config()
-
-db_config = config.get_database_config()
-
-username, password = config.get_smartscount()
-
-# Create a temporary directory for downloads
-with tempfile.TemporaryDirectory() as download_dir:
-    # Chrome options
-    chrome_options = webdriver.ChromeOptions()
-    prefs = {
-        "download.default_directory": download_dir,
-        "download.prompt_for_download": False,
-        "download.directory_upgrade": True,
-        "safebrowsing.enabled": True,
-    }
-    chrome_options.add_experimental_option("prefs", prefs)
-
-    for option in chrome_options_list:
-        chrome_options.add_argument(option)
-
-    dir_path = os.path.dirname(os.path.realpath(__file__))
-    chrome_options.add_extension(os.path.join(dir_path, extension_path))
-
 
 def set_page_info():
     st.set_page_config(
@@ -156,6 +125,7 @@ def set_page_info():
     )
     st.markdown(new_title, unsafe_allow_html=True)
     st.text("")
+
 
 # Function to get current date and time
 def get_current_time():
@@ -234,53 +204,36 @@ def execute(df):
                         success = False
                         while not success:
                             try:
-                                success = main(asin_to_keywords2)
-                                if success:
-                                    # formatted_results = listing(at_session)
-                                    # st.markdown(
-                                    #     f"""
-                                    #         <div style="width: 1500px; height: 3000px; overflow-y: scroll; background-color: #f0f0f0; border: 1px solid #ccc; padding: 10px;">
-                                    #             {formatted_results}
-                                    #         </div>
-                                    #         """,
-                                    #     unsafe_allow_html=True,
-                                    # )
-                                    st.success(f"Completed getting Keywords")
-                                else:
-                                    st.error("An error occurred during the process.")
+                                # Trigger GitHub Actions workflow instead of local processing
+                                trigger_github_workflow(asin_to_keywords2)
+                                success = True
+                                st.success(f"Completed triggering GitHub workflow for ASINs")
                             except Exception as e:
                                 st.error(f"An error occurred: {e}")
                 while True:
                     if not get_keyword_session(at_session).empty:
-                        # formatted_results = listing(at_session)
-                        # st.markdown(
-                        #     f"""
-                        #     <div style="width: 1400px; height: 3000px; overflow-y: scroll; background-color: #f0f0f0; border: 1px solid #ccc; padding: 10px;">
-                        #         {formatted_results}
-                        #     </div>
-                        #     """,
-                        #     unsafe_allow_html=True,
-                        # )
-                        # break
                         list_results, _ = listing(at_session)
                         df_results = pd.DataFrame(list_results)
                         break
-
 
                 if not df_results.empty:
                     st.write(df_results)
 
 
 def print_markdown(text):
-    st.markdown(f'<p style="background-color:#ffffff;color:#33ff33;font-size:24px;border-radius:2%;">{text}</p>', unsafe_allow_html=True)
+    st.markdown(
+        f'<p style="background-color:#ffffff;color:#33ff33;font-size:24px;border-radius:2%;">{text}</p>',
+        unsafe_allow_html=True,
+    )
+
 
 def show_data(df_results):
     select = st.session_state.select_asin
-    get_data = df_results.loc[df_results["asin"]== select]
+    get_data = df_results.loc[df_results["asin"] == select]
     st.markdown("# Title")
-    print_markdown(get_data['title'].values[0])
+    print_markdown(get_data["title"].values[0])
     st.markdown("# Description")
-    print_markdown(get_data['description'].values[0])
+    print_markdown(get_data["description"].values[0])
 
 
 def get_keyword_session(session_id):
@@ -288,10 +241,10 @@ def get_keyword_session(session_id):
     try:
         # Connect to your database
         conn = psycopg2.connect(
-            dbname="postgres",
-            user="postgres.sxoqzllwkjfluhskqlfl",
-            password="5giE*5Y5Uexi3P2",
-            host="aws-0-us-west-1.pooler.supabase.com",
+            dbname=db_config["dbname"],
+            user=db_config["user"],
+            password=db_config["password"],
+            host=db_config["host"],
         )
         cur = conn.cursor()
         # Execute a query
@@ -312,16 +265,17 @@ def get_keyword_session(session_id):
         if conn:
             conn.close()
 
+
 @st.cache_data
 def fetch_existing_asin_main():
     conn = None
     try:
         # Connect to your database
         conn = psycopg2.connect(
-            dbname="postgres",
-            user="postgres.sxoqzllwkjfluhskqlfl",
-            password="5giE*5Y5Uexi3P2",
-            host="aws-0-us-west-1.pooler.supabase.com",
+            dbname=db_config["dbname"],
+            user=db_config["user"],
+            password=db_config["password"],
+            host=db_config["host"],
         )
         cur = conn.cursor()
         # Execute a query
@@ -358,35 +312,50 @@ def load_google_data():
     st.empty()
     return df
 
+
 def display_database(df):
-    list_date = df['sys_run_date'].unique()
+    list_date = df["sys_run_date"].unique()
     select_rows = pd.DataFrame([])
-    select = st.selectbox(label="Chọn ngày nhập dữ liệu", 
-                                          options = list_date,
-                                          key="select_date",)
-    
+    select = st.selectbox(
+        label="Chọn ngày nhập dữ liệu",
+        options=list_date,
+        key="select_date",
+    )
+
     if select:
-        st.session_state['selected_option'] = select
-        get_date = df.loc[df['sys_run_date']==st.session_state['selected_option']]
-        get_date = get_date[["asin", "name", "customer","pack", "organic_keywords", "keyword", "title","description" ]]
+        st.session_state["selected_option"] = select
+        get_date = df.loc[df["sys_run_date"] == st.session_state["selected_option"]]
+        get_date = get_date[
+            [
+                "asin",
+                "name",
+                "customer",
+                "pack",
+                "organic_keywords",
+                "keyword",
+                "title",
+                "description",
+            ]
+        ]
         select_rows = display_title_and_description(get_date)
         return select_rows
     else:
         return select_rows
 
+
 def display_title_and_description(df):
     # Configure grid options using GridOptionsBuilder
     builder = GridOptionsBuilder.from_dataframe(df)
     builder.configure_pagination(enabled=True)
-    builder.configure_selection(selection_mode='single', use_checkbox=False)
+    builder.configure_selection(selection_mode="single", use_checkbox=False)
     grid_options = builder.build()
 
     # Display AgGrid
-    
+
     return_value = AgGrid(df, gridOptions=grid_options, height=200)
     selected_rows = return_value["selected_rows"]
     return selected_rows
-   
+
 
 def call_app():
     set_page_info()
@@ -405,159 +374,7 @@ def call_app():
     execute(df)
 
 
-def fetch_existing_relevant_asin_main():
-    conn = None
-    try:
-        # Connect to your database
-        conn = psycopg2.connect(
-            dbname=db_config["dbname"],
-            user=db_config["user"],
-            password=db_config["password"],
-            host=db_config["host"],
-        )
-        cur = conn.cursor()
-        # Execute a query
-        cur.execute("SELECT distinct asin FROM reverse_product_lookup_helium_2")
-
-        # Fetch all results
-        asins = cur.fetchall()
-        # Convert list of tuples to list
-        asins = [item[0] for item in asins]
-        return asins
-    except Exception as e:
-        print(f"Database error: {e}")
-        return []
-    finally:
-        if conn:
-            conn.close()
-
-
-def get_asin_auto_listing_table():
-    conn = None
-    try:
-        # Connect to your database
-        conn = psycopg2.connect(
-            dbname=db_config["dbname"],
-            user=db_config["user"],
-            password=db_config["password"],
-            host=db_config["host"],
-        )
-        cur = conn.cursor()
-        # Execute a query
-        cur.execute(
-            "SELECT distinct asin FROM auto_listing_table a where a.keyword is null",
-        )
-
-        # Fetch all results
-        asins = cur.fetchall()
-        # Convert list of tuples to list
-        asins = [item[0] for item in asins]
-        return asins
-    except Exception as e:
-        print(f"Database error: {e}")
-        return []
-    finally:
-        if conn:
-            conn.close()
-
-
-def update_keyword_auto_listing():
-    conn = None
-    try:
-        # Connect to your database
-        conn = psycopg2.connect(
-            dbname=db_config["dbname"],
-            user=db_config["user"],
-            password=db_config["password"],
-            host=db_config["host"],
-        )
-        cur = conn.cursor()
-        # Execute a query
-        cur.execute(
-            """-- Step 1: Create a CTE to concatenate keyword phrases grouped by asin_parent
-                WITH keyword_phrases AS (
-                    SELECT 
-                        asin_parent,
-                        STRING_AGG(keyword_phrase, ', ') AS concatenated_keywords
-                    FROM 
-                        reverse_product_lookup_helium_2
-                    GROUP BY 
-                        asin_parent
-                )
-
-                -- Step 2: Update the auto_listing_table with the concatenated keyword phrases using LEFT JOIN
-                UPDATE 
-                    auto_listing_table alt
-                SET 
-                    keyword = kp.concatenated_keywords
-                FROM 
-                    keyword_phrases kp
-                WHERE 
-                    alt.keyword IS NULL
-                    AND kp.asin_parent = alt.asin;
-
-                """
-        )
-        # Commit the transaction
-        conn.commit()
-    except Exception as e:
-        print(f"Database error: {e}")
-    finally:
-        if conn:
-            conn.close()
-
-
-def smartscouts_next_login(driver, username=username, password=password):
-    driver.get("https://app.smartscout.com/sessions/signin")
-    wait = WebDriverWait(driver, 30)
-    # Login process
-    try:
-        username_field = wait.until(
-            EC.visibility_of_element_located((By.ID, "username"))
-        )
-        username_field.send_keys(username)
-
-        password_field = driver.find_element(By.ID, "password")
-        password_field.send_keys(password)
-        password_field.send_keys(Keys.RETURN)
-        time.sleep(2)
-    except Exception as e:
-        # raise Exception
-        print("Error during login:", e)
-
-
-def clear_session_and_refresh(driver):
-    driver.delete_all_cookies()
-    driver.execute_script("window.localStorage.clear();")
-    driver.execute_script("window.sessionStorage.clear();")
-
-
-def start_driver(asin):
-    chrome_service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
-    try:
-        captcha_solver(driver, chrome_options)
-        scrap_helium_asin_keyword(driver, fetch_asin_tokeyword(asin), download_dir)
-        driver.quit()
-        update_keyword_auto_listing()
-        time.sleep(10)
-    finally:
-        driver.quit()
-
-
-def main(asins):
-    try:
-        with Pool(processes=3) as pool:
-            pool.map(start_driver, asins)
-        return True
-    except Exception as e:
-        print(f"An error occurred: {e}")
-        traceback.print_exc()
-        return False
-
-
 if __name__ == "__main__":
-    
 
     call_app()
     placeholder = st.sidebar.empty()
@@ -565,7 +382,11 @@ if __name__ == "__main__":
         # Get the current time and date
         current_time, current_date = get_current_time()
         # Render the HTML content in the sidebar
-        placeholder.markdown(clock_style + f"""<div class="clock">{current_time}</div><div class="date">{current_date}</div>""", unsafe_allow_html=True)
-            
+        placeholder.markdown(
+            clock_style
+            + f"""<div class="clock">{current_time}</div><div class="date">{current_date}</div>""",
+            unsafe_allow_html=True,
+        )
+
         # Wait for one second
         time.sleep(1)
