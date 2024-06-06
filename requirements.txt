@@ -7,3 +7,4 @@ selenium
 supabase
 webdriver_manager
 streamlit-aggrid
+langchain_core
