@@ -1,0 +1,36 @@
+# This is a basic workflow that is manually triggered
+
+name: Process ASINs
+
+on:
+  workflow_dispatch:
+    inputs:
+      asin_list:
+        description: 'Comma-separated list of ASINs'
+        required: true
+
+jobs:
+  process-asins:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        asin: ${{ fromJson(github.event.inputs.asin_list) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Process ASIN
+        run: |
+          echo "Processing ASIN: ${{ matrix.asin }}"
+          python main_process_data.py ${{ matrix.asin }}
+        continue-on-error: false
