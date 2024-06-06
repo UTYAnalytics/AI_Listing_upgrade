@@ -1,4 +1,3 @@
-glob
 uuid
 psycopg2
 tempfile
