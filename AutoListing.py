@@ -1,5 +1,7 @@
+import re
 import os
 import time
+import glob
 import uuid
 import psycopg2
 import tempfile
@@ -7,6 +9,7 @@ import psycopg2
 import traceback
 import traceback
 import numpy as np
+import unicodedata
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -21,15 +24,8 @@ from supabase import create_client, Client
 from config import config, format_header, get_newest_file
 from ultis_sellersprite_reverse_asin import scrap_sellersprite_asin_keyword
 from ultis_get_searchterm_smartsount import scrap_data_smartcount_relevant_product
-from ultis_get_product_smartscount import (
-    fetch_existing_relevant_asin,
-    scrap_data_smartcount_product,
-)
-from ultis_scrap_helium_cerebro import (
-    fetch_asin_tokeyword,
-    captcha_solver,
-    scrap_helium_asin_keyword,
-)
+from ultis_get_product_smartscount import fetch_existing_relevant_asin, scrap_data_smartcount_product
+from ultis_scrap_helium_cerebro import fetch_asin_tokeyword, captcha_solver, scrap_helium_asin_keyword
 
 from plotly.subplots import make_subplots
 from selenium.webdriver.common.by import By
@@ -80,6 +76,40 @@ headers = [
     "description",
 ]
 
+# HTML and CSS for better visualization
+clock_style = """
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@500&display=swap');
+
+.sidebar .block-container {
+    background-color: #1e1e1e;
+    padding: 0;
+}
+
+.clock {
+    font-family: 'Orbitron', sans-serif;
+    color: #00FF00;
+    font-size: 30px;
+    text-align: center;
+    padding: 10px;
+    background-color: #1e1e1e;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+
+.date {
+    font-family: 'Orbitron', sans-serif;
+    color: #FFD700;
+    font-size: 16px;
+    text-align: center;
+    padding: 10px;
+    background-color: #1e1e1e;
+    border-radius: 10px;
+    margin-top: 10px;
+}
+</style>
+"""
+
 # Initialize Supabase client
 supabase = config.supabase
 
@@ -127,6 +157,10 @@ def set_page_info():
     st.markdown(new_title, unsafe_allow_html=True)
     st.text("")
 
+# Function to get current date and time
+def get_current_time():
+    return time.strftime("%H:%M:%S"), time.strftime("%A, %B %d, %Y")
+
 
 def read_doc():
     df = pd.read_csv(GOOGLE_SHEET_URL)
@@ -139,7 +173,7 @@ def upload_file(capture_key: bool = True):
         "Upload file",
         accept_multiple_files=False,
         key="file_uploader_key",
-        type=["csv", "xlsx"],
+        type=["csv"],
         help="File uploader for auto-listing",
         on_change=None,
         disabled=capture_key,
@@ -232,8 +266,21 @@ def execute(df):
                         df_results = pd.DataFrame(list_results)
                         break
 
+
                 if not df_results.empty:
                     st.write(df_results)
+
+
+def print_markdown(text):
+    st.markdown(f'<p style="background-color:#ffffff;color:#33ff33;font-size:24px;border-radius:2%;">{text}</p>', unsafe_allow_html=True)
+
+def show_data(df_results):
+    select = st.session_state.select_asin
+    get_data = df_results.loc[df_results["asin"]== select]
+    st.markdown("# Title")
+    print_markdown(get_data['title'].values[0])
+    st.markdown("# Description")
+    print_markdown(get_data['description'].values[0])
 
 
 def get_keyword_session(session_id):
@@ -264,7 +311,6 @@ def get_keyword_session(session_id):
     finally:
         if conn:
             conn.close()
-
 
 @st.cache_data
 def fetch_existing_asin_main():
@@ -312,50 +358,35 @@ def load_google_data():
     st.empty()
     return df
 
-
 def display_database(df):
-    list_date = df["sys_run_date"].unique()
+    list_date = df['sys_run_date'].unique()
     select_rows = pd.DataFrame([])
-    select = st.selectbox(
-        label="Chọn ngày nhập dữ liệu",
-        options=list_date,
-        key="select_date",
-    )
-
+    select = st.selectbox(label="Chọn ngày nhập dữ liệu", 
+                                          options = list_date,
+                                          key="select_date",)
+    
     if select:
-        st.session_state["selected_option"] = select
-        get_date = df.loc[df["sys_run_date"] == st.session_state["selected_option"]]
-        get_date = get_date[
-            [
-                "asin",
-                "name",
-                "customer",
-                "pack",
-                "organic_keywords",
-                "keyword",
-                "title",
-                "description",
-            ]
-        ]
+        st.session_state['selected_option'] = select
+        get_date = df.loc[df['sys_run_date']==st.session_state['selected_option']]
+        get_date = get_date[["asin", "name", "customer","pack", "organic_keywords", "keyword", "title","description" ]]
         select_rows = display_title_and_description(get_date)
         return select_rows
     else:
         return select_rows
 
-
 def display_title_and_description(df):
     # Configure grid options using GridOptionsBuilder
     builder = GridOptionsBuilder.from_dataframe(df)
     builder.configure_pagination(enabled=True)
-    builder.configure_selection(selection_mode="single", use_checkbox=False)
+    builder.configure_selection(selection_mode='single', use_checkbox=False)
     grid_options = builder.build()
 
     # Display AgGrid
-
+    
     return_value = AgGrid(df, gridOptions=grid_options, height=200)
     selected_rows = return_value["selected_rows"]
     return selected_rows
-
+   
 
 def call_app():
     set_page_info()
@@ -363,7 +394,10 @@ def call_app():
     df = pd.DataFrame()
     file = upload_file(capture_key=False)
     if file:
-        df = pd.read_csv(file)
+        if file.name.endswith(".csv"):
+            df = pd.read_csv(file)
+        else:
+            st.error("Kiểm tra lại định dạng file, phải là đuôi CSV")
 
     if len(df) != 0:
         st.dataframe(df)
@@ -523,5 +557,15 @@ def main(asins):
 
 
 if __name__ == "__main__":
+    
 
     call_app()
+    placeholder = st.sidebar.empty()
+    while True:
+        # Get the current time and date
+        current_time, current_date = get_current_time()
+        # Render the HTML content in the sidebar
+        placeholder.markdown(clock_style + f"""<div class="clock">{current_time}</div><div class="date">{current_date}</div>""", unsafe_allow_html=True)
+            
+        # Wait for one second
+        time.sleep(1)
