@@ -1,5 +1,5 @@
 numpy
-pandas=
+pandas
 psycopg2-binary
 streamlit
 plotly
