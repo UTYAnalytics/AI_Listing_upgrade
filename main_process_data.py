@@ -198,10 +198,12 @@ def clear_session_and_refresh(driver):
 
 
 def start_driver(asin):
-    chrome_service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(service=chrome_service, options=chrome_options)
+    # chrome_service = Service(ChromeDriverManager().install())
+    driver = webdriver.Chrome(options=chrome_options)
     try:
+        print("captcha_solver")
         captcha_solver(driver, chrome_options)
+        print("process_data")
         scrap_helium_asin_keyword(driver, fetch_asin_tokeyword(asin), download_dir)
         driver.quit()
         update_keyword_auto_listing()
@@ -212,9 +214,7 @@ def start_driver(asin):
 
 def main(asins):
     try:
-        with Pool(processes=len(asins)) as pool:
-            pool.map(start_driver, asins)
-        return True
+        start_driver(asins)
     except Exception as e:
         print(f"An error occurred: {e}")
         traceback.print_exc()
