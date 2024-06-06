@@ -8,3 +8,5 @@ supabase
 webdriver_manager
 streamlit-aggrid
 langchain_core
+langsmith
+langchain_groq
