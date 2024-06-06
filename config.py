@@ -1,10 +1,12 @@
-# config.py
 import toml
 import glob
 import os
 from supabase import create_client, Client
 from datetime import datetime, timedelta
 import unicodedata
+import json
+import requests
+import streamlit as st
 
 
 class Config:
@@ -46,6 +48,15 @@ class Config:
         smartscount_config = self.config.get("smartscount", {})
         return smartscount_config["username"], smartscount_config["password"]
 
+    def get_github_config(self):
+        github_config = self.config.get("github", {})
+        return (
+            github_config["repo"],
+            github_config["token"],
+            github_config["workflow_id"],
+            github_config["branch"],
+        )
+
 
 # Utility function to format headers
 def format_header(header):
@@ -67,6 +78,24 @@ def get_newest_file(directory):
         return None
     newest_file = max(files, key=os.path.getmtime)
     return newest_file
+
+
+def trigger_github_workflow(asins):
+    config = Config()
+    GITHUB_REPO, GITHUB_TOKEN, WORKFLOW_ID, BRANCH = config.get_github_config()
+
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/actions/workflows/{WORKFLOW_ID}/dispatches"
+    headers = {
+        "Accept": "application/vnd.github.v3+json",
+        "Authorization": f"token {GITHUB_TOKEN}",
+    }
+    data = {"ref": BRANCH, "inputs": {"asin_list": json.dumps(asins)}}
+
+    response = requests.post(url, headers=headers, json=data)
+    if response.status_code == 204:
+        st.success("Workflow triggered successfully!")
+    else:
+        st.error("Error triggering workflow: " + response.text)
 
 
 # Initialize the configuration
