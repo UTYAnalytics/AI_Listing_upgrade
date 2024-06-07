@@ -98,6 +98,11 @@ jobs:
       - name: Verify VPN connection
         run: curl ifconfig.me
 
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
       - name: Process ASIN
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
