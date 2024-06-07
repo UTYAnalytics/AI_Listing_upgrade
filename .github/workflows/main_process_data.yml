@@ -72,7 +72,7 @@ jobs:
 
       - name: Process ASIN
         env:
-          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+          MY_GITHUB_TOKEN : ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
           echo "Processing ASIN: ${{ matrix.asin }}"
           python main_process_data.py ${{ matrix.asin }}
