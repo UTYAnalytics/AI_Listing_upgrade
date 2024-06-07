@@ -9,7 +9,7 @@ on:
 
 jobs:
   process-asins:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-m
     strategy:
       matrix:
         asin: ${{ fromJson(github.event.inputs.asin_list) }}
@@ -72,7 +72,7 @@ jobs:
 
       - name: Process ASIN
         env:
-          MY_GITHUB_TOKEN : ${{ secrets.MY_GITHUB_TOKEN }}
+          MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
           echo "Processing ASIN: ${{ matrix.asin }}"
           python config.py
