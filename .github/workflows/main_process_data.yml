@@ -75,4 +75,5 @@ jobs:
           MY_GITHUB_TOKEN : ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
           echo "Processing ASIN: ${{ matrix.asin }}"
+          python config.py
           python main_process_data.py ${{ matrix.asin }}
