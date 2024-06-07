@@ -215,6 +215,7 @@ def start_driver(asin):
 def main(asins):
     try:
         start_driver(asins)
+        return True
     except Exception as e:
         print(f"An error occurred: {e}")
         traceback.print_exc()
@@ -222,6 +223,7 @@ def main(asins):
 
 
 if __name__ == "__main__":
+    print(sys.argv[1])
     asin_list = sys.argv[1]
     success = main(asin_list)
     if not success:
