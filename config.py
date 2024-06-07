@@ -52,7 +52,7 @@ class Config:
         github_config = self.config.get("github", {})
         return (
             github_config["repo"],
-            github_config["token"],
+            os.getenv("GITHUB_TOKEN"),  # Read the token from environment variable
             github_config["workflow_id"],
             github_config["branch"],
         )
