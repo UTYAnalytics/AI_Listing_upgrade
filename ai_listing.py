@@ -80,11 +80,11 @@ class AILising:
                     Amazin Choices Snack Viet- Healthy Snack- Study Snack- Party Snack- An Delicious Vietnamese Lotus Root Seaweed Flavor Snack Variety Pack- Pack of 4 (7.05oz)
 
                     ## Description:
-                    ✅ DELICIOUS VIETNAMESE SNACK: Indulge in the flavors of Vietnam with our Lotus Root Seaweed flavor Snack, a unique and exotic treat for your taste buds. Huong vi Viet Nam, an vat cu sen rong bien den tu Co do Hue, nang tam nong san Viet Nam vuon tam quoc te
-                    ✅ CRISPY AND CRUNCHY: Enjoy the satisfying crunch of crispy seaweed flavor sheets and lotus root chips in every bite. Dac san Viet Nam voi huong vị truyen thong, mon ngon, vi rong bien
-                    ✅ HEALTHY OPTION: Our gourmet seaweed snack is a healthy, amazing choice for those looking for on-the-go snack. Giup cai thien giac ngu, an ngon, san pham chat luong cao tu Viet Nam
-                    ✅ SEA SALT PERFECTION: Seasoned with sea salt, our lotus seaweed flavor snacks provide the perfect balance of savory flavor. Gia vi Viet Nam, muoi an, rong bien, cu sen… su ket hop hai hoa giua sang tao va truyen thong
-                    ✅ PARTY SNACK FAVORITE: These lotus root crisps and seaweed chips are a hit at parties and gatherings, making them the ideal party snack. Qua Tet nguoi Viet, mon an tien loi, an voi uong tra Viet Nam tang vị thom cua sen    
+                    ✅ DELICIOUS VIETNAMESE SNACK: Indulge in the flavors of Vietnam with our Lotus Root Seaweed flavor Snack, a unique and exotic treat for your taste buds. 
+                    ✅ CRISPY AND CRUNCHY: Enjoy the satisfying crunch of crispy seaweed flavor sheets and lotus root chips in every bite.
+                    ✅ HEALTHY OPTION: Our gourmet seaweed snack is a healthy, amazing choice for those looking for on-the-go snack.
+                    ✅ SEA SALT PERFECTION: Seasoned with sea salt, our lotus seaweed flavor snacks provide the perfect balance of savory flavor.
+                    ✅ PARTY SNACK FAVORITE: These lotus root crisps and seaweed chips are a hit at parties and gatherings, making them the ideal party snack.
                 """
         self.prompt = ChatPromptTemplate.from_messages(
             [("system", system), ("human", human)]
