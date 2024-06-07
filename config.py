@@ -7,7 +7,6 @@ import unicodedata
 import json
 import requests
 import streamlit as st
-import configparser
 
 
 class Config:
@@ -52,11 +51,9 @@ class Config:
 
     def get_github_config(self):
         github_config = self.config.get("github", {})
-        config = configparser.ConfigParser()
-        config.read("config.ini")
         return (
             github_config["repo"],
-            github_config["token"],
+            self.MY_GITHUB_TOKEN,
             github_config["workflow_id"],
             github_config["branch"],
         )
