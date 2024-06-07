@@ -1,79 +1,17 @@
+# This is a basic workflow that is manually triggered
+
 name: Process ASINs
 
 on:
   workflow_dispatch:
     inputs:
       asin_list:
-        description: 'Comma-separated list of ASINs'
+        description: "Comma-separated list of ASINs"
         required: true
 
 jobs:
-  setup:
-    runs-on: ubuntu-latest
-    outputs:
-      vpn_config_path: ${{ steps.vpn-setup.outputs.vpn_config_path }}
-      vpn_auth_path: ${{ steps.vpn-setup.outputs.vpn_auth_path }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Install OpenVPN
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y openvpn
-          
-      - name: Verify OpenVPN installation
-        run: which openvpn
-
-      - name: Set up VPN configuration
-        id: vpn-setup
-        run: |
-          echo "${{ secrets.VPN_CONFIG }}" | base64 --decode > vpn-config.ovpn
-          echo -e "${{ secrets.VPN_USERNAME }}\n${{ secrets.VPN_PASSWORD }}" > vpn-auth.txt
-          echo "::set-output name=vpn_config_path::vpn-config.ovpn"
-          echo "::set-output name=vpn_auth_path::vpn-auth.txt"
-          
-      - name: Connect to VPN
-        run: |
-          sudo openvpn --config ${{ steps.vpn-setup.outputs.vpn_config_path }} --auth-user-pass ${{ steps.vpn-setup.outputs.vpn_auth_path }} --daemon
-          sleep 10  # Wait for the VPN to establish
-
-      - name: Verify VPN connection
-        run: curl ifconfig.me
-
-      - name: Cache pip dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Install xvfb
-        run: sudo apt-get install -y xvfb
-
-      - name: Cache Google Chrome
-        id: cache-chrome
-        uses: actions/cache@v2
-        with:
-          path: /usr/bin/google-chrome
-          key: google-chrome-stable
-
-      - name: Download and install Google Chrome
-        if: steps.cache-chrome.outputs.cache-hit != 'true'
-        run: |
-          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-          sudo dpkg -i google-chrome-stable_current_amd64.deb
-          sudo apt-get -f install
-
   process-asins:
     runs-on: ubuntu-latest
-    needs: setup
     strategy:
       matrix:
         asin: ${{ fromJson(github.event.inputs.asin_list) }}
@@ -81,23 +19,22 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Restore pip dependencies
-        uses: actions/cache@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
         with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
+          python-version: "3.x"
 
-      - name: Restore Google Chrome
-        uses: actions/cache@v2
-        with:
-          path: /usr/bin/google-chrome
-          key: google-chrome-stable
-
-      - name: Verify VPN connection
-        run: curl ifconfig.me
-
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+      - name: Install xvfb
+        run: sudo apt-get install xvfb
+      - name: Download and install Google Chrome
+        run: |
+          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
+          sudo dpkg -i google-chrome-stable_current_amd64.deb
+          sudo apt-get -f install
       - name: Process ASIN
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
