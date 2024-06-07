@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       asin_list:
-        description: 'Comma-separated list of ASINs'
+        description: "Comma-separated list of ASINs"
         required: true
 
 jobs:
@@ -19,10 +19,28 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Install OpenVPN
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y openvpn
+
+      - name: Set up VPN configuration
+        run: |
+          echo "${{ secrets.VPN_CONFIG }}" | base64 --decode > vpn-config.ovpn
+          echo -e "${{ secrets.VPN_USERNAME }}\n${{ secrets.VPN_PASSWORD }}" > vpn-auth.txt
+
+      - name: Connect to VPN
+        run: |
+          sudo openvpn --config vpn-config.ovpn --auth-user-pass vpn-auth.txt --daemon
+          sleep 10  # Wait for the VPN to establish
+
+      - name: Verify VPN connection
+        run: curl ifconfig.me
+
       - name: Set up Python
         uses: actions/setup-python@v2
         with:
-          python-version: '3.x'
+          python-version: "3.x"
 
       - name: Install dependencies
         run: |
@@ -35,7 +53,6 @@ jobs:
           wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
           sudo dpkg -i google-chrome-stable_current_amd64.deb
           sudo apt-get -f install
-
       - name: Process ASIN
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
