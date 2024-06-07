@@ -56,7 +56,7 @@ class Config:
         config.read("config.ini")
         return (
             github_config["repo"],
-            self.MY_GITHUB_TOKEN,  # Read the token from environment variable
+            github_config["token"],
             github_config["workflow_id"],
             github_config["branch"],
         )
