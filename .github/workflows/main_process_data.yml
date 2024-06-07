@@ -11,8 +11,8 @@ jobs:
   setup:
     runs-on: ubuntu-latest
     outputs:
-      vpn-config-path: ${{ steps.vpn-setup.outputs.vpn-config-path }}
-      vpn-auth-path: ${{ steps.vpn-setup.outputs.vpn-auth-path }}
+      vpn_config_path: ${{ steps.vpn-setup.outputs.vpn_config_path }}
+      vpn_auth_path: ${{ steps.vpn-setup.outputs.vpn_auth_path }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -27,13 +27,12 @@ jobs:
         run: |
           echo "${{ secrets.VPN_CONFIG }}" | base64 --decode > vpn-config.ovpn
           echo -e "${{ secrets.VPN_USERNAME }}\n${{ secrets.VPN_PASSWORD }}" > vpn-auth.txt
-        outputs:
-          vpn-config-path: vpn-config.ovpn
-          vpn-auth-path: vpn-auth.txt
+          echo "::set-output name=vpn_config_path::vpn-config.ovpn"
+          echo "::set-output name=vpn_auth_path::vpn-auth.txt"
 
       - name: Connect to VPN
         run: |
-          sudo openvpn --config ${{ steps.vpn-setup.outputs.vpn-config-path }} --auth-user-pass ${{ steps.vpn-setup.outputs.vpn-auth-path }} --daemon
+          sudo openvpn --config ${{ steps.vpn-setup.outputs.vpn_config_path }} --auth-user-pass ${{ steps.vpn-setup.outputs.vpn_auth_path }} --daemon
           sleep 10  # Wait for the VPN to establish
 
       - name: Verify VPN connection
@@ -92,6 +91,14 @@ jobs:
         with:
           path: /usr/bin/google-chrome
           key: google-chrome-stable
+
+      - name: Connect to VPN
+        run: |
+          sudo openvpn --config ${{ needs.setup.outputs.vpn_config_path }} --auth-user-pass ${{ needs.setup.outputs.vpn_auth_path }} --daemon
+          sleep 10  # Wait for the VPN to establish
+
+      - name: Verify VPN connection
+        run: curl ifconfig.me
 
       - name: Process ASIN
         env:
