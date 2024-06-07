@@ -21,7 +21,13 @@ from ai_listing import listing
 from multiprocessing import Pool
 from datetime import datetime
 from supabase import create_client, Client
-from config import config, format_header, get_newest_file, trigger_github_workflow
+from config import (
+    config,
+    format_header,
+    get_newest_file,
+    trigger_github_workflow,
+    check_workflow_status,
+)
 from ultis_sellersprite_reverse_asin import scrap_sellersprite_asin_keyword
 from ultis_get_searchterm_smartsount import scrap_data_smartcount_relevant_product
 from ultis_get_product_smartscount import (
@@ -201,15 +207,39 @@ def execute(df):
                 # get_asin_auto_listing_table()
                 if asin_to_keywords2:
                     with st.spinner("Processing..."):
-                        success = False
-                        while not success:
-                            try:
-                                # Trigger GitHub Actions workflow instead of local processing
-                                trigger_github_workflow(asin_to_keywords2)
-                                success = True
-                                st.success(f"Completed triggering GitHub workflow for ASINs")
-                            except Exception as e:
-                                st.error(f"An error occurred: {e}")
+                        try:
+                            # Trigger GitHub Actions workflow
+                            workflow_response = trigger_github_workflow(
+                                asin_to_keywords2
+                            )
+                            run_id = workflow_response.get("id")
+                            st.success(
+                                f"Triggered GitHub workflow for ASINs, run ID: {run_id}"
+                            )
+
+                            # Poll the workflow status
+                            success = False
+                            while not success:
+                                time.sleep(
+                                    10
+                                )  # Wait for 10 seconds before polling again
+                                workflow_status = check_workflow_status(run_id)
+                                status = workflow_status.get("status")
+                                conclusion = workflow_status.get("conclusion")
+
+                                if status == "completed":
+                                    if conclusion == "success":
+                                        success = True
+                                        st.success(
+                                            f"GitHub workflow completed successfully for ASINs"
+                                        )
+                                    else:
+                                        st.error(
+                                            f"GitHub workflow failed with conclusion: {conclusion}"
+                                        )
+                                        break
+                        except Exception as e:
+                            st.error(f"An error occurred: {e}")
                 while True:
                     if not get_keyword_session(at_session).empty:
                         list_results, _ = listing(at_session)
