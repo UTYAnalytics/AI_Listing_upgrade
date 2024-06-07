@@ -21,13 +21,7 @@ from ai_listing import listing
 from multiprocessing import Pool
 from datetime import datetime
 from supabase import create_client, Client
-from config import (
-    config,
-    format_header,
-    get_newest_file,
-    trigger_github_workflow,
-    check_workflow_status,
-)
+from config import config, format_header, get_newest_file, trigger_github_workflow
 from ultis_sellersprite_reverse_asin import scrap_sellersprite_asin_keyword
 from ultis_get_searchterm_smartsount import scrap_data_smartcount_relevant_product
 from ultis_get_product_smartscount import (
@@ -207,39 +201,24 @@ def execute(df):
                 # get_asin_auto_listing_table()
                 if asin_to_keywords2:
                     with st.spinner("Processing..."):
-                        try:
-                            # Trigger GitHub Actions workflow
-                            workflow_response = trigger_github_workflow(
-                                asin_to_keywords2
-                            )
-                            run_id = workflow_response.get("id")
-                            st.success(
-                                f"Triggered GitHub workflow for ASINs, run ID: {run_id}"
-                            )
-
-                            # Poll the workflow status
-                            success = False
-                            while not success:
-                                time.sleep(
-                                    10
-                                )  # Wait for 10 seconds before polling again
-                                workflow_status = check_workflow_status(run_id)
-                                status = workflow_status.get("status")
-                                conclusion = workflow_status.get("conclusion")
-
-                                if status == "completed":
-                                    if conclusion == "success":
-                                        success = True
-                                        st.success(
-                                            f"GitHub workflow completed successfully for ASINs"
-                                        )
-                                    else:
-                                        st.error(
-                                            f"GitHub workflow failed with conclusion: {conclusion}"
-                                        )
-                                        break
-                        except Exception as e:
-                            st.error(f"An error occurred: {e}")
+                        success = False
+                        # Trigger GitHub Actions workflow instead of local processing
+                        trigger_github_workflow(asin_to_keywords2)
+                        
+                        st.info(
+                            "Waiting for all ASINs to be present in the database..."
+                        )
+                        while not success:
+                            try:
+                                fetched_asins = fetch_existing_relevant_asin_main()
+                                if all_asins_present(fetched_asins, asin_to_keywords2):
+                                    success = True
+                                    st.success(
+                                        "Completed triggering GitHub workflow for ASINs"
+                                    )
+                                    time.sleep(2)  # Wait for 5 seconds before checking again
+                            except Exception as e:
+                                st.error(f"An error occurred: {e}")
                 while True:
                     if not get_keyword_session(at_session).empty:
                         list_results, _ = listing(at_session)
@@ -248,6 +227,10 @@ def execute(df):
 
                 if not df_results.empty:
                     st.write(df_results)
+
+
+def all_asins_present(fetched_asins, required_asins):
+    return all(asin in fetched_asins for asin in required_asins)
 
 
 def print_markdown(text):
