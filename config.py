@@ -96,8 +96,6 @@ def trigger_github_workflow(asins):
         st.success("Workflow triggered successfully!")
     else:
         st.error("Error triggering workflow: " + response.text)
-    response.raise_for_status()
-    return response.json()
 
 
 def check_workflow_status(run_id):
