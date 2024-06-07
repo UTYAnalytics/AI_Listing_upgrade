@@ -17,23 +17,23 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Install OpenVPN
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y openvpn
+      # - name: Install OpenVPN
+      #   run: |
+      #     sudo apt-get update
+      #     sudo apt-get install -y openvpn
 
-      - name: Set up VPN configuration
-        run: |
-          echo "${{ secrets.VPN_CONFIG }}" | base64 --decode > vpn-config.ovpn
-          echo -e "${{ secrets.VPN_USERNAME }}\n${{ secrets.VPN_PASSWORD }}" > vpn-auth.txt
+      # - name: Set up VPN configuration
+      #   run: |
+      #     echo "${{ secrets.VPN_CONFIG }}" | base64 --decode > vpn-config.ovpn
+      #     echo -e "${{ secrets.VPN_USERNAME }}\n${{ secrets.VPN_PASSWORD }}" > vpn-auth.txt
 
-      - name: Connect to VPN
-        run: |
-          sudo openvpn --config vpn-config.ovpn --auth-user-pass vpn-auth.txt --daemon
-          sleep 10  # Wait for the VPN to establish
+      # - name: Connect to VPN
+      #   run: |
+      #     sudo openvpn --config vpn-config.ovpn --auth-user-pass vpn-auth.txt --daemon
+      #     sleep 10  # Wait for the VPN to establish
 
-      - name: Verify VPN connection
-        run: curl ifconfig.me
+      # - name: Verify VPN connection
+      #   run: curl ifconfig.me
 
       - name: Set up Python
         uses: actions/setup-python@v2
