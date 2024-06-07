@@ -14,7 +14,7 @@ class Config:
         self.config = toml.load(config_path)
         self.supabase = self.init_supabase()
         self.current_time_gmt7 = self.calculate_gmt7_time()
-        self.MY_GITHUB_TOKEN = st.secrets.get("general", {}).get("GITHUB_TOKEN", 0)
+        self.MY_GITHUB_TOKEN = os.getenv("MY_GITHUB_TOKEN")
 
     def get_supabase_config(self):
         supabase_config = self.config.get("supabase", {})
