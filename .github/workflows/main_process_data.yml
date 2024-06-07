@@ -32,7 +32,7 @@ jobs:
           echo -e "${{ secrets.VPN_USERNAME }}\n${{ secrets.VPN_PASSWORD }}" > vpn-auth.txt
           echo "::set-output name=vpn_config_path::vpn-config.ovpn"
           echo "::set-output name=vpn_auth_path::vpn-auth.txt"
-
+          
       - name: Connect to VPN
         run: |
           sudo openvpn --config ${{ steps.vpn-setup.outputs.vpn_config_path }} --auth-user-pass ${{ steps.vpn-setup.outputs.vpn_auth_path }} --daemon
@@ -94,11 +94,6 @@ jobs:
         with:
           path: /usr/bin/google-chrome
           key: google-chrome-stable
-
-      - name: Connect to VPN
-        run: |
-          sudo openvpn --config ${{ needs.setup.outputs.vpn_config_path }} --auth-user-pass ${{ needs.setup.outputs.vpn_auth_path }} --daemon
-          sleep 10  # Wait for the VPN to establish
 
       - name: Verify VPN connection
         run: curl ifconfig.me
