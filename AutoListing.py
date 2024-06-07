@@ -49,7 +49,7 @@ pd.options.plotting.backend = "plotly"
 # Initialize Supabase client
 supabase = config.supabase
 db_config = config.get_database_config()
-
+GITHUB_TOKEN = st.secrets.get("general", {}).get("GITHUB_TOKEN", 0)
 GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1avXZgp1DIg7weP9GbDRrOH-T4SKvrfX-oJW4HE73aQE/export?format=csv&gid=0"
 
 feature_map = {
@@ -203,8 +203,8 @@ def execute(df):
                     with st.spinner("Processing..."):
                         success = False
                         # Trigger GitHub Actions workflow instead of local processing
-                        trigger_github_workflow(asin_to_keywords2)
-                        
+                        trigger_github_workflow(asin_to_keywords2, GITHUB_TOKEN)
+
                         st.info(
                             "Waiting for all ASINs to be present in the database..."
                         )
@@ -216,7 +216,9 @@ def execute(df):
                                     st.success(
                                         "Completed triggering GitHub workflow for ASINs"
                                     )
-                                    time.sleep(2)  # Wait for 5 seconds before checking again
+                                    time.sleep(
+                                        2
+                                    )  # Wait for 5 seconds before checking again
                             except Exception as e:
                                 st.error(f"An error occurred: {e}")
                 while True:

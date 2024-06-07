@@ -14,7 +14,7 @@ class Config:
         self.config = toml.load(config_path)
         self.supabase = self.init_supabase()
         self.current_time_gmt7 = self.calculate_gmt7_time()
-        self.MY_GITHUB_TOKEN = os.getenv("MY_GITHUB_TOKEN")
+        # self.MY_GITHUB_TOKEN = os.getenv("MY_GITHUB_TOKEN")
 
     def get_supabase_config(self):
         supabase_config = self.config.get("supabase", {})
@@ -53,7 +53,6 @@ class Config:
         github_config = self.config.get("github", {})
         return (
             github_config["repo"],
-            self.MY_GITHUB_TOKEN,
             github_config["workflow_id"],
             github_config["branch"],
         )
@@ -81,9 +80,9 @@ def get_newest_file(directory):
     return newest_file
 
 
-def trigger_github_workflow(asins):
+def trigger_github_workflow(asins,GITHUB_TOKEN):
     config = Config()
-    GITHUB_REPO, GITHUB_TOKEN, WORKFLOW_ID, BRANCH = config.get_github_config()
+    GITHUB_REPO, WORKFLOW_ID, BRANCH = config.get_github_config()
 
     url = f"https://api.github.com/repos/{GITHUB_REPO}/actions/workflows/{WORKFLOW_ID}/dispatches"
     headers = {
