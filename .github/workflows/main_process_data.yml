@@ -9,7 +9,7 @@ on:
 
 jobs:
   process-asins:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-latest-m
     strategy:
       matrix:
         asin: ${{ fromJson(github.event.inputs.asin_list) }}
