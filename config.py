@@ -7,6 +7,7 @@ import unicodedata
 import json
 import requests
 import streamlit as st
+from dotenv import load_dotenv
 
 
 class Config:

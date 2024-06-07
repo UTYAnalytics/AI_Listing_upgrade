@@ -10,3 +10,4 @@ streamlit-aggrid
 langchain_core
 langsmith
 langchain_groq
+python-dotenv
