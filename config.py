@@ -96,6 +96,21 @@ def trigger_github_workflow(asins):
         st.success("Workflow triggered successfully!")
     else:
         st.error("Error triggering workflow: " + response.text)
+    response.raise_for_status()
+    return response.json()
+
+
+def check_workflow_status(run_id):
+    config = Config()
+    GITHUB_REPO, GITHUB_TOKEN, WORKFLOW_ID, BRANCH = config.get_github_config()
+    url = f"https://api.github.com/repos/{GITHUB_REPO}/actions/runs/{run_id}"
+    headers = {
+        "Authorization": f"token {GITHUB_TOKEN}",
+        "Accept": "application/vnd.github.v3+json",
+    }
+    response = requests.get(url, headers=headers)
+    response.raise_for_status()
+    return response.json()
 
 
 # Initialize the configuration
