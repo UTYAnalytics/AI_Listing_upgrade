@@ -9,13 +9,12 @@ import requests
 import streamlit as st
 import configparser
 
+
 class Config:
     def __init__(self, config_path="config.toml"):
         self.config = toml.load(config_path)
         self.supabase = self.init_supabase()
         self.current_time_gmt7 = self.calculate_gmt7_time()
-        self.MY_GITHUB_TOKEN = os.getenv("MY_GITHUB_TOKEN")
-
 
     def get_supabase_config(self):
         supabase_config = self.config.get("supabase", {})
@@ -53,10 +52,12 @@ class Config:
     def get_github_config(self):
         github_config = self.config.get("github", {})
         config = configparser.ConfigParser()
-        config.read('config.ini')
+        config.read("config.ini")
         return (
             github_config["repo"],
-            config['DEFAULT']['MY_GITHUB_TOKEN'],  # Read the token from environment variable
+            config["DEFAULT"][
+                "MY_GITHUB_TOKEN"
+            ],  # Read the token from environment variable
             github_config["workflow_id"],
             github_config["branch"],
         )
