@@ -10,6 +10,7 @@ on:
 jobs:
   process-asins:
     runs-on: ubuntu-latest
+    container: utydata02/custom-python-chrome:latest
     strategy:
       matrix:
         asin: ${{ fromJson(github.event.inputs.asin_list) }}
@@ -17,62 +18,9 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      # - name: Install OpenVPN
-      #   run: |
-      #     sudo apt-get update
-      #     sudo apt-get install -y openvpn
-
-      # - name: Set up VPN configuration
-      #   run: |
-      #     echo "${{ secrets.VPN_CONFIG }}" | base64 --decode > vpn-config.ovpn
-      #     echo -e "${{ secrets.VPN_USERNAME }}\n${{ secrets.VPN_PASSWORD }}" > vpn-auth.txt
-
-      # - name: Connect to VPN
-      #   run: |
-      #     sudo openvpn --config vpn-config.ovpn --auth-user-pass vpn-auth.txt --daemon
-      #     sleep 10  # Wait for the VPN to establish
-
-      # - name: Verify VPN connection
-      #   run: curl ifconfig.me
-
-      - name: Set up Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.x"
-
-      - name: Cache pip dependencies
-        uses: actions/cache@v2
-        with:
-          path: ~/.cache/pip
-          key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-          restore-keys: |
-            ${{ runner.os }}-pip-
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Install xvfb
-        run: sudo apt-get install -y xvfb
-
-      - name: Cache Google Chrome
-        id: cache-chrome
-        uses: actions/cache@v2
-        with:
-          path: /usr/bin/google-chrome
-          key: google-chrome-stable
-
-      - name: Download and install Google Chrome
-        if: steps.cache-chrome.outputs.cache-hit != 'true'
-        run: |
-          wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-          sudo dpkg -i google-chrome-stable_current_amd64.deb
-          sudo apt-get -f install
-
       - name: Process ASIN
-        env:
-          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
           echo "Processing ASIN: ${{ matrix.asin }}"
           python main_process_data.py ${{ matrix.asin }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
