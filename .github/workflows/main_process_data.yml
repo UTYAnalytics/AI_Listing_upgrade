@@ -10,7 +10,7 @@ on:
 jobs:
   process-asins:
     runs-on: ubuntu-latest
-    container: utydata02/custom-python-chrome:latest
+    container: utydata02/ai-listing-uty:latest
     strategy:
       matrix:
         asin: ${{ fromJson(github.event.inputs.asin_list) }}
