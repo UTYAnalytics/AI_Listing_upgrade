@@ -187,7 +187,10 @@ def scrap_helium_asin_keyword(
                     print("Error checking status")
                     time.sleep(1)
                     login_button = WebDriverWait(driver, 3000000).until(
-                            EC.visibility_of_element_located((By.CLASS_NAME, "btn-secondary")))
+                        EC.visibility_of_element_located(
+                            (By.CLASS_NAME, "btn-secondary")
+                        )
+                    )
                     driver.execute_script("arguments[0].click();", login_button)
                 if status_ready == True:
                     status_login = True
@@ -207,13 +210,14 @@ def scrap_helium_asin_keyword(
                     except:
                         print("Element not visible")
         time.sleep(2)
-        login_button =  WebDriverWait(driver, 3000000).until(
-                            EC.visibility_of_element_located((By.CLASS_NAME, "btn-secondary")))
+        login_button = WebDriverWait(driver, 3000000).until(
+            EC.visibility_of_element_located((By.CLASS_NAME, "btn-secondary"))
+        )
         driver.execute_script("arguments[0].click();", login_button)
         time.sleep(2)
     except Exception as e:
         print(f"Error during login: {e}")
-        traceback.print_exc()
+        # traceback.print_exc()
         return
 
     # driver.refresh("https://members.helium10.com/cerebro?accountId=1544526096")
@@ -256,7 +260,7 @@ def scrap_helium_asin_keyword(
                 print("Clicked on 'Run New Search'.")
         except TimeoutException:
             print("Popup not found within the timeout period.")
-        driver.get_screenshot_as_file("screenshot.png")
+        # driver.get_screenshot_as_file("screenshot.png")
         element = WebDriverWait(driver, 60000).until(
             EC.presence_of_element_located(
                 (By.XPATH, "//button[@data-testid='export']")
@@ -427,7 +431,7 @@ def scrap_helium_asin_keyword(
         except Exception as e:
             print(f"Error with rows: {e}")
     except Exception as e:
-        print(e)
-        traceback.print_exc()
+        print(f"Error Final:{e}")
+        # traceback.print_exc()
     finally:
         driver.quit()
