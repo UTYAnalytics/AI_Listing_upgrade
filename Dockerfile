@@ -4,6 +4,13 @@ FROM python:3.9-slim
 # Set the working directory
 WORKDIR /app
 
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    openvpn \
+    xvfb \
+    wget \
+    software-properties-common
+    
 # Install xvfb and Google Chrome
 RUN apt-get update && \
     apt-get install -y xvfb wget gnupg2 && \
