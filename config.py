@@ -80,7 +80,7 @@ def get_newest_file(directory):
     return newest_file
 
 
-def trigger_github_workflow(asins,GITHUB_TOKEN):
+def trigger_github_workflow(asins, GITHUB_TOKEN):
     config = Config()
     GITHUB_REPO, WORKFLOW_ID, BRANCH = config.get_github_config()
 

@@ -202,11 +202,16 @@ def execute(df):
                 if asin_to_keywords2:
                     with st.spinner("Processing..."):
                         # Splitting asin_to_keywords2 into subsets of 2 ASINs each
-                        subsets = [asin_to_keywords2[i:i+2] for i in range(0, len(asin_to_keywords2), 2)]
+                        subsets = [
+                            asin_to_keywords2[i : i + 1]
+                            for i in range(0, len(asin_to_keywords2), 1)
+                        ]
                         for subset in subsets:
                             trigger_github_workflow(subset, GITHUB_TOKEN)
 
-                        st.info("Waiting for all ASINs to be present in the database...")
+                        st.info(
+                            "Waiting for all ASINs to be present in the database..."
+                        )
                         success = False
                         while not success:
                             try:
