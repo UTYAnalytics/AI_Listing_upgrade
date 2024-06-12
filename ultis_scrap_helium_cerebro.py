@@ -150,13 +150,13 @@ def scrap_helium_asin_keyword(
     password="qz6EvRm65L3HdjM2!!@#$",
 ):
     asin_parent, subsets = asin
-    # Open Helium10
-    driver.get("https://members.helium10.com/cerebro?accountId=1544526096")
-    wait = WebDriverWait(driver, 30)
-    print("login")
 
     # Login process
     try:
+        # Open Helium10
+        driver.get("https://members.helium10.com/cerebro?accountId=1544526096")
+        wait = WebDriverWait(driver, 30)
+        print("login")
         username_field = wait.until(
             EC.visibility_of_element_located((By.ID, "loginform-email"))
         )
@@ -217,7 +217,7 @@ def scrap_helium_asin_keyword(
         time.sleep(2)
     except Exception as e:
         print(f"Error during login: {e}")
-        # traceback.print_exc()
+        traceback.print_exc()
         return
 
     # driver.refresh("https://members.helium10.com/cerebro?accountId=1544526096")
@@ -432,6 +432,6 @@ def scrap_helium_asin_keyword(
             print(f"Error with rows: {e}")
     except Exception as e:
         print(f"Error Final:{e}")
-        # traceback.print_exc()
+        traceback.print_exc()
     finally:
         driver.quit()
