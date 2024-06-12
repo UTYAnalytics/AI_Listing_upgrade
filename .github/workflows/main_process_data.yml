@@ -9,7 +9,7 @@ on:
 
 jobs:
   process-asins:
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     container: utydata02/ai-listing-uty:latest
     strategy:
       matrix:
@@ -27,7 +27,6 @@ jobs:
         run: |
           openvpn --config vpn-config.ovpn --auth-user-pass vpn-auth.txt --daemon
           sleep 5  # Wait for the VPN to establish
-
 
       - name: Verify VPN connection
         run: curl ifconfig.me
