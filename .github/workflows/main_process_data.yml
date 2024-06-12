@@ -9,11 +9,12 @@ on:
 
 jobs:
   process-asins:
-    runs-on: self-hosted
-    container: utydata02/ai-listing-uty:latest
     strategy:
       matrix:
+        runner: [ubuntu-latest, ubuntu-22.04, ubuntu-20.04]
         asin: ${{ fromJson(github.event.inputs.asin_list) }}
+    runs-on: ${{ matrix.runner }}
+    container: utydata02/ai-listing-uty:latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -35,5 +36,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          echo "Processing ASIN: ${{ matrix.asin }}"
+          echo "Running on ${{ matrix.runner }} with ASIN ${{ matrix.asin }}"
           python main_process_data.py ${{ matrix.asin }}
