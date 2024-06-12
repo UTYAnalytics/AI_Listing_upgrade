@@ -9,7 +9,7 @@ on:
 
 jobs:
   process-asins:
-    runs-on: self-hosted
+    runs-on: ai-listing-runner-instances
     container: utydata02/ai-listing-uty:latest
     strategy:
       matrix:
