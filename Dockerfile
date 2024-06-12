@@ -6,11 +6,13 @@ WORKDIR /app
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
+    sudo \
     openvpn \
     xvfb \
     wget \
     gnupg2 \
     software-properties-common
+
 
 # Install Google Chrome
 RUN wget https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb && \

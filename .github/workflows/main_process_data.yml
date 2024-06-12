@@ -25,8 +25,9 @@ jobs:
 
       - name: Connect to VPN
         run: |
-          sudo openvpn --config vpn-config.ovpn --auth-user-pass vpn-auth.txt --daemon
+          openvpn --config vpn-config.ovpn --auth-user-pass vpn-auth.txt --daemon
           sleep 5  # Wait for the VPN to establish
+
 
       - name: Verify VPN connection
         run: curl ifconfig.me
