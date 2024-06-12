@@ -175,10 +175,6 @@ def save_to_supabase(row, at_session):
     except Exception as e:
         st.error(f"Error with rows: {e}")
 
-def chunk_list(lst, n):
-    """Yield successive n-sized chunks from lst."""
-    for i in range(0, len(lst), n):
-        yield lst[i:i + n]
 
 def execute(df):
     df_results = []
@@ -205,17 +201,13 @@ def execute(df):
                 # get_asin_auto_listing_table()
                 if asin_to_keywords2:
                     with st.spinner("Processing..."):
+                        # Splitting asin_to_keywords2 into subsets of 2 ASINs each
+                        subsets = [asin_to_keywords2[i:i+2] for i in range(0, len(asin_to_keywords2), 2)]
+                        for subset in subsets:
+                            trigger_github_workflow(subset, GITHUB_TOKEN)
+
+                        st.info("Waiting for all ASINs to be present in the database...")
                         success = False
-                        # Divide ASINs into chunks of 2
-                        asin_chunks = list(chunk_list(asin_to_keywords2, 2))
-                         # Trigger GitHub workflows for each chunk
-                        for asin_chunk in asin_chunks:
-                            with st.spinner(f"Processing chunk: {asin_chunk}"):
-                                success = False
-                                trigger_github_workflow(asin_chunk, GITHUB_TOKEN)
-                        st.info(
-                            "Waiting for all ASINs to be present in the database..."
-                        )
                         while not success:
                             try:
                                 fetched_asins = fetch_existing_relevant_asin_main()

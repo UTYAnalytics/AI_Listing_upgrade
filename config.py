@@ -92,10 +92,10 @@ def trigger_github_workflow(asins,GITHUB_TOKEN):
     data = {"ref": BRANCH, "inputs": {"asin_list": json.dumps(asins)}}
 
     response = requests.post(url, headers=headers, json=data)
-    if response.status_code == 204:
-        st.success("Workflow triggered successfully!")
-    else:
-        st.error("Error triggering workflow: " + response.text)
+    # if response.status_code == 204:
+    #     st.success("Workflow triggered successfully!")
+    # else:
+    #     st.error("Error triggering workflow: " + response.text)
 
 
 def check_workflow_status(run_id):
