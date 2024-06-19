@@ -7,7 +7,8 @@ from typing import Dict, List
 import os
 from datetime import datetime
 
-GROQ_API_KEY = "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"
+
+GROQ_API_KEY = st.secrets.get("groq", {}).get("API", 0)
 
 
 class AILising:
