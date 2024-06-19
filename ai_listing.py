@@ -282,9 +282,9 @@ def listing(session_id):
     return results, formatted_results
 
 
-# Example usage
+# # Example usage
 # if __name__ == '__main__':
-#     session_id = "decfbc45-e13c-4565-bcd1-970303c69bee"
+#     session_id = "104848ca-1d2c-459e-921d-9c5cbcfeb005"
 #     results = listing(session_id)
 
 #     with open("output.txt", "w", encoding="utf-8") as f:
