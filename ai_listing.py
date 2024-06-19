@@ -6,7 +6,8 @@ from langchain_groq import ChatGroq
 from typing import Dict, List
 import os
 from datetime import datetime
-from AutoListing import GROQ_API_KEY
+
+GROQ_API_KEY = st.secrets.get("groq", {}).get("API", 0)
 
 
 class AILising:
