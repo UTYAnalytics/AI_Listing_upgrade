@@ -19,6 +19,10 @@ class Config:
     def get_supabase_config(self):
         supabase_config = self.config.get("supabase", {})
         return supabase_config["url"], supabase_config["key"]
+    
+    def get_GROQ_config(self):
+        supabase_config = self.config.get("groq", {})
+        return supabase_config.get("API", 0)
 
     def get_database_config(self):
         return self.config.get("database", {})
