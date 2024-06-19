@@ -50,6 +50,7 @@ pd.options.plotting.backend = "plotly"
 supabase = config.supabase
 db_config = config.get_database_config()
 GITHUB_TOKEN = st.secrets.get("general", {}).get("GITHUB_TOKEN", 0)
+GROQ_API_KEY = st.secrets.get("groq", {}).get("API", 0)
 GOOGLE_SHEET_URL = "https://docs.google.com/spreadsheets/d/1avXZgp1DIg7weP9GbDRrOH-T4SKvrfX-oJW4HE73aQE/export?format=csv&gid=0"
 
 feature_map = {
