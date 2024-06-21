@@ -1,12 +1,13 @@
 # Byte-compiled / optimized / DLL files
+.toml
 __pycache__/
 *__pycache__/*
 *.py[cod]
 *$py.class
 .env
 .DS_Store
-config.toml
-config.ini
+.toml
+.ini
 *.DS_Store*
 # C extensions
 *.so
@@ -20,6 +21,7 @@ downloads/
 eggs/
 .eggs/
 lib/
+.streamlit/
 lib64/
 parts/
 sdist/
