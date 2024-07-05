@@ -106,11 +106,6 @@ def scrap_amazon_keyword(driver, df_keywords):
                 search_box.send_keys(data_item["synonyms_keyword"])
                 time.sleep(10)
                 # Define the CSS selector for the element
-                css_selector = "#nav-flyout-searchAjax .two-pane-results-container"
-                suggestions = WebDriverWait(driver, 60).until(
-                    EC.visibility_of_element_located((By.CSS_SELECTOR, css_selector))
-                )
-
                 # Get all suggestion elements
                 suggestion_elements = driver.find_elements(
                     By.CLASS_NAME, "s-suggestion-container"
