@@ -268,8 +268,15 @@ if __name__ == "__main__":
         print("Error: No ASIN list provided.")
         sys.exit(1)
 
+    asin_list_input = sys.argv[1]
+    print(f"Raw input: {asin_list_input}")
+
+    if not asin_list_input.strip():
+        print("Error: Input is empty.")
+        sys.exit(1)
+
     try:
-        asin_list = json.loads(sys.argv[1])
+        asin_list = json.loads(asin_list_input)
         print(f"Processing ASIN: {asin_list}")
         success = main(asin_list)
         if not success:
