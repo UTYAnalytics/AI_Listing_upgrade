@@ -56,7 +56,7 @@ feature_map = {
     "STT": "id",
     "Tên": "name",
     "CUSTOMERS": "customer",
-    "Asin liên quan": "asin",
+    # "Asin liên quan": "asin",
     "NGÀY": "insert_date",
     "Pack": "pack",
     "Organic Keywords": "organic_keywords",
@@ -67,7 +67,7 @@ feature_map = {
 headers = [
     "id",
     "sys_run_date",
-    "asin",
+    # "asin",
     "name",
     "customer",
     "insert_date",
