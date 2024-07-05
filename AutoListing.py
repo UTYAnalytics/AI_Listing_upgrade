@@ -200,31 +200,21 @@ def execute(df):
                     with st.spinner("Processing..."):
                         # Splitting user_keywords into subsets of 1 row each
                         subsets = [
-                            user_keywords.iloc[i : i + 1]
+                            user_keywords.iloc[i:i + 1]
                             for i in range(0, len(user_keywords), 1)
                         ]
                         for subset in subsets:
                             trigger_github_workflow(subset, GITHUB_TOKEN)
 
-                        st.info(
-                            "Waiting for all Keywords to be present in the database..."
-                        )
+                        st.info("Waiting for all Keywords to be present in the database...")
                         success = False
                         while not success:
                             try:
-                                fetched_asins = fetch_existing_relevant_keyword_main(
-                                    at_session
-                                )
-                                if all_asins_present(
-                                    fetched_asins, user_keywords["organic_keywords"]
-                                ):
+                                fetched_asins = fetch_existing_relevant_keyword_main(at_session)
+                                if all_asins_present(fetched_asins, user_keywords["organic_keywords"]):
                                     success = True
-                                    st.success(
-                                        "Completed triggering GitHub workflow for Keywords"
-                                    )
-                                    time.sleep(
-                                        2
-                                    )  # Wait for 2 seconds before checking again
+                                    st.success("Completed triggering GitHub workflow for Keywords")
+                                    time.sleep(2)  # Wait for 2 seconds before checking again
                             except Exception as e:
                                 st.error(f"An error occurred: {e}")
                     while True:
