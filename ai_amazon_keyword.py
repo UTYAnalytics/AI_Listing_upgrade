@@ -11,10 +11,8 @@ import pandas as pd
 import psycopg2
 from datetime import datetime
 import numpy as np
-import traceback
 from multiprocessing import Pool
 from selenium.common.exceptions import TimeoutException
-import traceback
 from selenium.webdriver.common.action_chains import ActionChains
 from config import config, get_newest_file
 import glob
@@ -25,52 +23,10 @@ supabase = config.supabase
 # Get timezone offset and calculate current time in GMT+7
 current_time_gmt7 = config.current_time_gmt7
 
-# # Path to your extension .crx, extension_id file
+# Path to your extension .crx, extension_id file
 extension_path, extension_id = config.get_paths_config()
 
 db_config = config.get_database_config()
-
-
-def captcha_solver(driver, chrome_options, API="7f97e318653cc85d2d7bc5efdfb1ea9f"):
-    # Create a temporary Chrome user data directory
-    user_data_dir = os.path.join(os.getcwd(), "temp_user_data_dir")
-    os.makedirs(user_data_dir, exist_ok=True)
-    chrome_options.add_extension(extension_path)
-    chrome_options.add_argument(f"user-data-dir={user_data_dir}")
-    # Navigate to the extension's URL
-    extension_url = f"chrome-extension://{extension_id}/popup.html"  # Replace 'popup.html' with your extension's specific page if different
-    driver.get(extension_url)
-
-    # Interact with the extension's elements
-    try:
-        # Example: Input text into a text field
-        wait = WebDriverWait(driver, 10)
-        input_field = wait.until(
-            EC.visibility_of_element_located(
-                (By.CSS_SELECTOR, "input#client-key-input")
-            )
-        )
-
-        # Enter text into the input field
-        input_text = API
-        input_field.clear()
-        input_field.send_keys(input_text)
-
-        # Wait for the save button to be clickable, then click it
-        save_button = wait.until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "button#client-key-save-btn"))
-        )
-        save_button.click()
-        time.sleep(1)
-        # Interact with the radio buttons
-        token_radio_button = wait.until(
-            EC.element_to_be_clickable((By.CLASS_NAME, "ant-radio-button-wrapper"))
-        )
-        token_radio_button.click()
-    except Exception as e:
-        # raise Exception
-        print("Error during captcha:", e)
-
 
 def wait_for_download_complete(download_dir, keyword, timeout=60):
     """Wait for the file with the given keyword in the name to be fully downloaded in the directory."""
@@ -90,15 +46,47 @@ def wait_for_download_complete(download_dir, keyword, timeout=60):
         time.sleep(1)
     return None
 
+def upsert_results(results):
+    """Upsert results into the database"""
+    conn = None
+    try:
+        # Connect to your database
+        conn = psycopg2.connect(**db_config)
+        cur = conn.cursor()
+        for result in results:
+            cur.execute(
+                """
+                UPDATE auto_listing_table
+                SET keyword = %s
+                WHERE id = %s AND session_id = %s
+                """,
+                (
+                    result["keyword"],
+                    result["id"],
+                    result["session_id"],
+                ),
+            )
+        conn.commit()
+    except Exception as e:
+        print(f"Database error: {e}")
+    finally:
+        if conn:
+            conn.close()
 
-def scrap_amazon_keyword(driver, at_session, df_keywords, keyword_list=[]):
+def scrap_amazon_keyword(driver, df_keywords, keyword_list=[]):
+    results = []
+    
     for index, row in df_keywords.iterrows():
         keywords = row["Organic Keywords"].split(", ")
+        at_session=row["session_id"]
         for keyword in keywords:
-            keyword_list.append({"synonyms_keyword": keyword})
+            keyword_list.append({"synonyms_keyword": keyword, "id": row["id"], "session_id": at_session})
+    
     datas_keyword = pd.DataFrame(keyword_list)
+    
     for index, data_item in datas_keyword.iterrows():
         driver.get(f"https://www.amazon.com/s?k={data_item['synonyms_keyword']}")
+        
         # Wait for the search input field to be visible
         search_box = WebDriverWait(driver, 10).until(
             EC.visibility_of_element_located((By.ID, "twotabsearchtextbox"))
@@ -107,6 +95,8 @@ def scrap_amazon_keyword(driver, at_session, df_keywords, keyword_list=[]):
         # Clear the search box and enter the keyword
         search_box.clear()
         search_box.send_keys(data_item["synonyms_keyword"])
+        search_box.send_keys(Keys.RETURN)
+        
         try:
             # Wait for the suggestions dropdown to be visible
             suggestions = WebDriverWait(driver, 10).until(
@@ -127,5 +117,16 @@ def scrap_amazon_keyword(driver, at_session, df_keywords, keyword_list=[]):
                 f"Suggestions for {data_item['synonyms_keyword']}: {combined_suggestions}"
             )
 
+            # Add result to the list
+            result = {
+                "id": data_item["id"],
+                "session_id": data_item["session_id"],
+                "keyword": combined_suggestions,
+            }
+            results.append(result)
+
         except Exception as e:
             print(f"Error while searching for {data_item['synonyms_keyword']}: {e}")
+
+    # Upsert the results into the database
+    upsert_results(results)

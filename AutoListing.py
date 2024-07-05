@@ -33,7 +33,7 @@ from ultis_scrap_helium_cerebro import (
     captcha_solver,
     scrap_helium_asin_keyword,
 )
-from main_process_data import fetch_existing_relevant_asin_main, main
+from main_process_data import fetch_existing_relevant_asin_main, main,fetch_existing_relevant_keyword_main
 from plotly.subplots import make_subplots
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -191,15 +191,38 @@ def execute(df):
                 df = df[headers]
                 st.success(f"Xử lý data - Xong !")
                 save_to_supabase(df, at_session)
-                
-                while True:
-                    if not get_keyword_session(at_session).empty:
-                        list_results, _ = listing(at_session)
-                        df_results = pd.DataFrame(list_results)
-                        break
+                user_keywords = df[["id", "session_id", "organic_keywords"]]
+                if not user_keywords.empty:
+                    with st.spinner("Processing..."):
+                        # Splitting user_keywords into subsets of 1 row each
+                        subsets = [
+                            user_keywords.iloc[i:i + 1]
+                            for i in range(0, len(user_keywords), 1)
+                        ]
+                        for subset in subsets:
+                            trigger_github_workflow(subset, GITHUB_TOKEN)
 
-                if not df_results.empty:
-                    st.write(df_results)
+                        st.info("Waiting for all Keywords to be present in the database...")
+                        success = False
+                        while not success:
+                            try:
+                                fetched_asins = fetch_existing_relevant_keyword_main()
+                                if all_asins_present(fetched_asins, user_keywords["organic_keywords"]):
+                                    success = True
+                                    st.success("Completed triggering GitHub workflow for Keywords")
+                                    time.sleep(2)  # Wait for 2 seconds before checking again
+                            except Exception as e:
+                                st.error(f"An error occurred: {e}")
+                    while True:
+                        if not get_keyword_session(at_session).empty:
+                            list_results, _ = listing(at_session)
+                            df_results = pd.DataFrame(list_results)
+                            break
+
+                    if not df_results.empty:
+                        st.write(df_results)
+                else:
+                    st.error("Please enter your keyword")
 
 
 def all_asins_present(fetched_asins, required_asins):

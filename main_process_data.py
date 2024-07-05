@@ -33,6 +33,7 @@ from ultis_scrap_helium_cerebro import (
     captcha_solver,
     scrap_helium_asin_keyword,
 )
+from ai_amazon_keyword import scrap_amazon_keyword
 from ultis_sellersprite_reverse_asin import scrap_sellersprite_asin_keyword
 
 # Initialize Supabase client
@@ -89,6 +90,37 @@ def fetch_existing_relevant_asin_main():
         # Convert list of tuples to list
         asins = [item[0] for item in asins]
         return asins
+    except Exception as e:
+        print(f"Database error: {e}")
+        return []
+    finally:
+        if conn:
+            conn.close()
+
+
+def fetch_existing_relevant_keyword_main(at_session):
+    conn = None
+    try:
+        # Connect to your database
+        conn = psycopg2.connect(
+            dbname=db_config["dbname"],
+            user=db_config["user"],
+            password=db_config["password"],
+            host=db_config["host"],
+        )
+        cur = conn.cursor()
+        # Execute a query
+        cur.execute(
+            """SELECT distinct organic_keywords FROM auto_listing_table where keyword is not null and session_id=%s
+                """,
+            (at_session,),
+        )
+
+        # Fetch all results
+        keywords = cur.fetchall()
+        # Convert list of tuples to list
+        keywords = [item[0] for item in keywords]
+        return keywords
     except Exception as e:
         print(f"Database error: {e}")
         return []
@@ -204,7 +236,8 @@ def start_driver(asin):
         print("captcha_solver")
         captcha_solver(driver, chrome_options)
         print("process_data")
-        scrap_helium_asin_keyword(driver, fetch_asin_tokeyword(asin), download_dir)
+        # scrap_helium_asin_keyword(driver, fetch_asin_tokeyword(asin), download_dir)
+        scrap_amazon_keyword(driver, asin)
         driver.quit()
         update_keyword_auto_listing()
         time.sleep(10)
