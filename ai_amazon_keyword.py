@@ -17,6 +17,7 @@ from selenium.webdriver.common.action_chains import ActionChains
 from config import config, get_newest_file
 import glob
 import traceback
+
 # Initialize Supabase client
 supabase = config.supabase
 
@@ -97,17 +98,20 @@ def scrap_amazon_keyword(driver, df_keywords):
 
             # Wait for the search input field to be visible
             search_box = WebDriverWait(driver, 10).until(
-                        EC.visibility_of_element_located((By.NAME, "field-keywords"))
-                    )
+                EC.visibility_of_element_located((By.NAME, "field-keywords"))
+            )
 
             # Clear the search box and enter the keyword
             search_box.clear()
             search_box.send_keys(data_item["synonyms_keyword"])
             time.sleep(10)
             try:
-                # Wait for the suggestions dropdown to be visible
+                # Define the XPath for the element
+                xpath_expression = "//div[@id='nav-flyout-searchAjax']//div[contains(@class, 'two-pane-results-container')]"
+
+                # Wait for the element to be visible using XPath
                 suggestions = WebDriverWait(driver, 10).until(
-                    EC.visibility_of_element_located((By.CLASS_NAME, "two-pane-results-container"))
+                    EC.visibility_of_element_located((By.XPATH, xpath_expression))
                 )
                 time.sleep(10)
 
