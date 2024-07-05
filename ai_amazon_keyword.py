@@ -93,7 +93,7 @@ def scrap_amazon_keyword(driver, df_keywords):
             driver.get(f"https://www.amazon.com/s?k={data_item['synonyms_keyword']}")
 
             # Wait for the search input field to be visible
-            search_box = WebDriverWait(driver, 100000000).until(
+            search_box = WebDriverWait(driver, 30).until(
                 EC.visibility_of_element_located((By.ID, "twotabsearchtextbox"))
             )
 
