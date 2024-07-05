@@ -18,6 +18,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install selenium webdriver-manager tenacity
+
       - name: Set up VPN configuration
         run: |
           echo "${{ secrets.VPN_CONFIG }}" | base64 --decode > vpn-config.ovpn

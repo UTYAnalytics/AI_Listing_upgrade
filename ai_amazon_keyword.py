@@ -91,6 +91,9 @@ def scrap_amazon_keyword(driver, df_keywords):
 
         for index, data_item in datas_keyword.iterrows():
             driver.get(f"https://www.amazon.com/s?k={data_item['synonyms_keyword']}")
+            print(
+                f"Navigated to https://www.amazon.com/s?k={data_item['synonyms_keyword']}"
+            )
 
             # Wait for the search input field to be visible
             search_box = WebDriverWait(driver, 10).until(
