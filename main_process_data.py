@@ -237,7 +237,7 @@ def start_driver(asins):
         print("captcha_solver")
         captcha_solver(driver, chrome_options)
         print("process_data")
-        
+
         # Convert asins to DataFrame if it's not already
         if isinstance(asins, dict):
             df_keywords = pd.DataFrame([asins])
@@ -245,12 +245,13 @@ def start_driver(asins):
             df_keywords = pd.DataFrame(asins)
         else:
             raise ValueError("Invalid type for asins. Expected dict or list of dicts.")
-        
+
         scrap_amazon_keyword(driver, df_keywords)
         update_keyword_auto_listing()
         time.sleep(10)
     finally:
         driver.quit()
+
 
 def main(asins):
     try:
@@ -261,9 +262,18 @@ def main(asins):
         traceback.print_exc()
         return False
 
+
 if __name__ == "__main__":
-    print(sys.argv[1])
-    asin_list = json.loads(sys.argv[1])
-    success = main(asin_list)
-    if not success:
+    if len(sys.argv) < 2:
+        print("Error: No ASIN list provided.")
+        sys.exit(1)
+
+    try:
+        asin_list = json.loads(sys.argv[1])
+        print(f"Processing ASIN: {asin_list}")
+        success = main(asin_list)
+        if not success:
+            sys.exit(1)
+    except json.JSONDecodeError as e:
+        print(f"JSONDecodeError: {e}")
         sys.exit(1)

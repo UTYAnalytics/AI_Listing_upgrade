@@ -94,7 +94,7 @@ def trigger_github_workflow(asins, GITHUB_TOKEN):
         "Authorization": f"token {GITHUB_TOKEN}",
     }
 
-    data = {"ref": BRANCH, "inputs": {"asin_list": json.dumps([asins])}}
+    data = {"ref": BRANCH, "inputs": {"asin_list": json.dumps(asins)}}
 
     response = requests.post(url, headers=headers, json=data)
     # if response.status_code == 204:
