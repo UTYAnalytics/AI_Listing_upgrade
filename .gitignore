@@ -1,12 +1,10 @@
 # Byte-compiled / optimized / DLL files
-.toml
 __pycache__/
 *__pycache__/*
 *.py[cod]
 *$py.class
 .env
 .DS_Store
-.toml
 .ini
 *.DS_Store*
 # C extensions
