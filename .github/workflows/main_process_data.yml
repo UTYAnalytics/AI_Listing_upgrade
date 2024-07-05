@@ -4,16 +4,16 @@ on:
   workflow_dispatch:
     inputs:
       asin_list:
-        description: "Comma-separated list of ASINs"
+        description: "JSON array of ASINs with id, session_id, and organic_keywords"
         required: true
 
 jobs:
   process-asins:
     runs-on: ubuntu-latest
     container: utydata02/ai-listing-uty:latest
-    strategy:
-      matrix:
-        asin: ${{ fromJson(github.event.inputs.asin_list) }}
+    # strategy:
+    #   matrix:
+    #     asin: ${{ fromJson(github.event.inputs.asin_list) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -35,5 +35,5 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          echo "Processing ASIN: ${{ matrix.asin }}"
-          python main_process_data.py ${{ matrix.asin }}
+          echo "Processing ASIN: ${{ github.event.inputs.asin_list }}"
+          python main_process_data.py '${{ github.event.inputs.asin_list }}'
