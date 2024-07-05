@@ -28,6 +28,7 @@ extension_path, extension_id = config.get_paths_config()
 
 db_config = config.get_database_config()
 
+
 def wait_for_download_complete(download_dir, keyword, timeout=60):
     """Wait for the file with the given keyword in the name to be fully downloaded in the directory."""
     start_time = time.time()
@@ -45,6 +46,7 @@ def wait_for_download_complete(download_dir, keyword, timeout=60):
             print(f"Error occurred: {e}, retrying...")
         time.sleep(1)
     return None
+
 
 def upsert_results(results):
     """Upsert results into the database"""
@@ -73,20 +75,23 @@ def upsert_results(results):
         if conn:
             conn.close()
 
+
 def scrap_amazon_keyword(driver, df_keywords, keyword_list=[]):
     results = []
-    
+
     for index, row in df_keywords.iterrows():
         keywords = row["organic_keywords"].split(", ")
         at_session = row["session_id"]
         for keyword in keywords:
-            keyword_list.append({"synonyms_keyword": keyword, "id": row["id"], "session_id": at_session})
-    
+            keyword_list.append(
+                {"synonyms_keyword": keyword, "id": row["id"], "session_id": at_session}
+            )
+
     datas_keyword = pd.DataFrame(keyword_list)
-    
+
     for index, data_item in datas_keyword.iterrows():
         driver.get(f"https://www.amazon.com/s?k={data_item['synonyms_keyword']}")
-        
+
         # Wait for the search input field to be visible
         search_box = WebDriverWait(driver, 10).until(
             EC.visibility_of_element_located((By.ID, "twotabsearchtextbox"))
@@ -95,14 +100,13 @@ def scrap_amazon_keyword(driver, df_keywords, keyword_list=[]):
         # Clear the search box and enter the keyword
         search_box.clear()
         search_box.send_keys(data_item["synonyms_keyword"])
-        search_box.send_keys(Keys.RETURN)
-        
+        time.sleep(10)
         try:
             # Wait for the suggestions dropdown to be visible
             suggestions = WebDriverWait(driver, 10).until(
                 EC.visibility_of_element_located((By.ID, "nav-flyout-searchAjax"))
             )
-            time.sleep(2)
+            time.sleep(10)
 
             # Get all suggestion elements
             suggestion_elements = driver.find_elements(

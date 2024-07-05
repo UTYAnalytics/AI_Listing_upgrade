@@ -262,6 +262,7 @@ def main(asins):
         traceback.print_exc()
         return False
 
+
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Error: No ASIN list provided.")
@@ -286,3 +287,16 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Unexpected error: {e}")
         sys.exit(1)
+    # asin_list = [
+    #     {
+    #         "id": 6,
+    #         "session_id": "d47837aa-dc2f-46ee-abf2-14fd04fd0ae7",
+    #         "organic_keywords": "International Snack Adventure, Want Want, Vicpie, Hello Kitty, Choco Stick, Meiji, Milkita, Kasugai, Smarties, Toosie, Red Hots, Skittles",
+    #     },
+    #     {
+    #         "id": 3,
+    #         "session_id": "d47837aa-dc2f-46ee-abf2-14fd04fd0ae7",
+    #         "organic_keywords": "Snack Viet, Vietnamese, Crispy, Seaweed Flavor,  Lotus Root Snack",
+    #     },
+    # ]
+    # success = main(asin_list)
