@@ -195,14 +195,17 @@ def execute(df):
                 df = df[headers]
                 st.success(f"Xử lý data - Xong !")
                 save_to_supabase(df, at_session)
+                # Select required columns for processing
                 user_keywords = df[["id", "session_id", "organic_keywords"]]
                 if not user_keywords.empty:
                     with st.spinner("Processing..."):
-                        # Splitting user_keywords into subsets of 1 row each
+                        # Split DataFrame into subsets of 1 row each
                         subsets = [
                             user_keywords.iloc[i : i + 1].to_dict(orient="records")[0]
                             for i in range(0, len(user_keywords), 1)
                         ]
+
+                        # Trigger GitHub workflow for each subset
                         for subset in subsets:
                             print(f"Triggering GitHub workflow with subset: {subset}")
                             trigger_github_workflow([subset], GITHUB_TOKEN)
@@ -210,6 +213,8 @@ def execute(df):
                         st.info(
                             "Waiting for all Keywords to be present in the database..."
                         )
+
+                        # Wait for all keywords to be present in the database
                         success = False
                         while not success:
                             try:
@@ -228,6 +233,8 @@ def execute(df):
                                     )  # Wait for 2 seconds before checking again
                             except Exception as e:
                                 st.error(f"An error occurred: {e}")
+
+                    # Fetch and display results once keywords are present
                     while True:
                         if not get_keyword_session(at_session).empty:
                             list_results, _ = listing(at_session)

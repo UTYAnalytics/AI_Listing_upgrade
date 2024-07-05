@@ -262,7 +262,6 @@ def main(asins):
         traceback.print_exc()
         return False
 
-
 if __name__ == "__main__":
     if len(sys.argv) < 2:
         print("Error: No ASIN list provided.")
@@ -283,4 +282,7 @@ if __name__ == "__main__":
             sys.exit(1)
     except json.JSONDecodeError as e:
         print(f"JSONDecodeError: {e}")
+        sys.exit(1)
+    except Exception as e:
+        print(f"Unexpected error: {e}")
         sys.exit(1)
