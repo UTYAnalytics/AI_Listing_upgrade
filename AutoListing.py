@@ -33,7 +33,7 @@ from ultis_scrap_helium_cerebro import (
     captcha_solver,
     scrap_helium_asin_keyword,
 )
-from main_process_data import fetch_existing_relevant_asin_main, main,fetch_existing_relevant_keyword_main
+from main_process_data import fetch_existing_relevant_asin_main, main,fetch_existing_relevant_keyword_main,
 from plotly.subplots import make_subplots
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -206,7 +206,7 @@ def execute(df):
                         success = False
                         while not success:
                             try:
-                                fetched_asins = fetch_existing_relevant_keyword_main()
+                                fetched_asins = fetch_existing_relevant_keyword_main(at_session)
                                 if all_asins_present(fetched_asins, user_keywords["organic_keywords"]):
                                     success = True
                                     st.success("Completed triggering GitHub workflow for Keywords")
