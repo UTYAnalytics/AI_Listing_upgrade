@@ -109,7 +109,7 @@ def scrap_amazon_keyword(driver, df_keywords):
                 # Print the page source for debugging
                 print(driver.page_source)
                 # Take a screenshot after entering the keyword
-                take_screenshot(driver, f"screenshot_{data_item['synonyms_keyword']}_entered.png")
+                driver.get_screenshot_as_file(f"screenshot_{data_item['synonyms_keyword']}_entered.png")
                 css_selector = "#nav-flyout-searchAjax .two-pane-results-container"
                 suggestions = WebDriverWait(driver, 20).until(
                     EC.visibility_of_element_located((By.CSS_SELECTOR, css_selector))
