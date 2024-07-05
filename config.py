@@ -84,7 +84,7 @@ def get_newest_file(directory):
     return newest_file
 
 
-def trigger_github_workflow(subset, GITHUB_TOKEN):
+def trigger_github_workflow(asins, GITHUB_TOKEN):
     config = Config()
     GITHUB_REPO, WORKFLOW_ID, BRANCH = config.get_github_config()
 
@@ -93,15 +93,14 @@ def trigger_github_workflow(subset, GITHUB_TOKEN):
         "Accept": "application/vnd.github.v3+json",
         "Authorization": f"token {GITHUB_TOKEN}",
     }
-    # Convert subset DataFrame to list of dictionaries
-    asins = subset.to_dict(orient="records")
-    data = {"ref": BRANCH, "inputs": {"asin_list": json.dumps(asins)}}
+
+    data = {"ref": BRANCH, "inputs": {"asin_list": json.dumps([asins])}}
 
     response = requests.post(url, headers=headers, json=data)
     # if response.status_code == 204:
-    #     st.success("Workflow triggered successfully!")
+    #     print("Workflow triggered successfully")
     # else:
-    #     st.error("Error triggering workflow: " + response.text)
+    #     print(f"Failed to trigger workflow: {response.status_code}, {response.text}")
 
 
 def check_workflow_status(run_id):
