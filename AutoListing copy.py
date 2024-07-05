@@ -191,7 +191,41 @@ def execute(df):
                 df = df[headers]
                 st.success(f"Xử lý data - Xong !")
                 save_to_supabase(df, at_session)
-                
+                user_asins = df["asin"]
+                # get_asin_auto_listing_table()
+                asin_to_keywords2 = [
+                    asin1
+                    for asin1 in user_asins
+                    if asin1 not in fetch_existing_relevant_asin_main()
+                ]
+                # get_asin_auto_listing_table()
+                if asin_to_keywords2:
+                    with st.spinner("Processing..."):
+                        # Splitting asin_to_keywords2 into subsets of 2 ASINs each
+                        subsets = [
+                            asin_to_keywords2[i : i + 1]
+                            for i in range(0, len(asin_to_keywords2), 1)
+                        ]
+                        for subset in subsets:
+                            trigger_github_workflow(subset, GITHUB_TOKEN)
+
+                        st.info(
+                            "Waiting for all ASINs to be present in the database..."
+                        )
+                        success = False
+                        while not success:
+                            try:
+                                fetched_asins = fetch_existing_relevant_asin_main()
+                                if all_asins_present(fetched_asins, asin_to_keywords2):
+                                    success = True
+                                    st.success(
+                                        "Completed triggering GitHub workflow for ASINs"
+                                    )
+                                    time.sleep(
+                                        2
+                                    )  # Wait for 5 seconds before checking again
+                            except Exception as e:
+                                st.error(f"An error occurred: {e}")
                 while True:
                     if not get_keyword_session(at_session).empty:
                         list_results, _ = listing(at_session)
