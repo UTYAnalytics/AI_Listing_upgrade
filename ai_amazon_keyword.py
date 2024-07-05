@@ -77,7 +77,7 @@ def scrap_amazon_keyword(driver, df_keywords, keyword_list=[]):
     results = []
     
     for index, row in df_keywords.iterrows():
-        keywords = row["Organic Keywords"].split(", ")
+        keywords = row["organic_keywords"].split(", ")
         at_session=row["session_id"]
         for keyword in keywords:
             keyword_list.append({"synonyms_keyword": keyword, "id": row["id"], "session_id": at_session})
