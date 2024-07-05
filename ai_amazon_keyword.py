@@ -76,58 +76,69 @@ def upsert_results(results):
             conn.close()
 
 
-def scrap_amazon_keyword(driver, df_keywords, keyword_list=[]):
-    results = []
-
+def scrap_amazon_keyword(driver, df_keywords):
     for index, row in df_keywords.iterrows():
+        results = []
+        all_suggestions = set()  # Use a set to collect suggestions and avoid duplicates
         keywords = row["organic_keywords"].split(", ")
         at_session = row["session_id"]
-        for keyword in keywords:
-            keyword_list.append({"synonyms_keyword": keyword, "session_id": at_session})
+        keyword_list = [
+            {"synonyms_keyword": keyword, "session_id": at_session}
+            for keyword in keywords
+        ]
 
-    datas_keyword = pd.DataFrame(keyword_list)
+        datas_keyword = pd.DataFrame(keyword_list)
 
-    for index, data_item in datas_keyword.iterrows():
-        driver.get(f"https://www.amazon.com/s?k={data_item['synonyms_keyword']}")
+        for index, data_item in datas_keyword.iterrows():
+            driver.get(f"https://www.amazon.com/s?k={data_item['synonyms_keyword']}")
 
-        # Wait for the search input field to be visible
-        search_box = WebDriverWait(driver, 10).until(
-            EC.visibility_of_element_located((By.ID, "twotabsearchtextbox"))
-        )
-
-        # Clear the search box and enter the keyword
-        search_box.clear()
-        search_box.send_keys(data_item["synonyms_keyword"])
-        time.sleep(10)
-        try:
-            # Wait for the suggestions dropdown to be visible
-            suggestions = WebDriverWait(driver, 10).until(
-                EC.visibility_of_element_located((By.ID, "nav-flyout-searchAjax"))
+            # Wait for the search input field to be visible
+            search_box = WebDriverWait(driver, 10).until(
+                EC.visibility_of_element_located((By.ID, "twotabsearchtextbox"))
             )
+
+            # Clear the search box and enter the keyword
+            search_box.clear()
+            search_box.send_keys(data_item["synonyms_keyword"])
             time.sleep(10)
+            try:
+                # Wait for the suggestions dropdown to be visible
+                suggestions = WebDriverWait(driver, 10).until(
+                    EC.visibility_of_element_located((By.ID, "nav-flyout-searchAjax"))
+                )
+                time.sleep(10)
 
-            # Get all suggestion elements
-            suggestion_elements = driver.find_elements(
-                By.CLASS_NAME, "s-suggestion-container"
-            )
+                # Get all suggestion elements
+                suggestion_elements = driver.find_elements(
+                    By.CLASS_NAME, "s-suggestion-container"
+                )
 
-            # Extract the text of each suggestion and combine them into a comma-separated string
-            suggestion_texts = [element.text for element in suggestion_elements]
-            combined_suggestions = ", ".join(suggestion_texts)
+                # Extract the text of each suggestion and collect them
+                suggestion_texts = [element.text for element in suggestion_elements]
+                all_suggestions.update(
+                    suggestion_texts
+                )  # Add suggestions to the set to avoid duplicates
 
-            print(
-                f"Suggestions for {data_item['synonyms_keyword']}: {combined_suggestions}"
-            )
+                print(
+                    f"Suggestions for {data_item['synonyms_keyword']}: {', '.join(suggestion_texts)}"
+                )
 
-            # Add result to the list
-            result = {
-                "session_id": data_item["session_id"],
-                "keyword": combined_suggestions,
-            }
-            results.append(result)
+            except Exception as e:
+                print(f"Error while searching for {data_item['synonyms_keyword']}: {e}")
 
-        except Exception as e:
-            print(f"Error while searching for {data_item['synonyms_keyword']}: {e}")
+        # Combine all collected suggestions into a single comma-separated string without duplicates
+        combined_suggestions = ", ".join(
+            sorted(all_suggestions)
+        )  # Sort to maintain consistent order
 
-    # Upsert the results into the database
-    upsert_results(results)
+        # Add result to the list
+        result = {
+            "session_id": row["session_id"],
+            "organic_keywords": row["organic_keywords"],
+            "keyword": combined_suggestions,
+        }
+        results.append(result)
+
+        print("Upserting data keywords")
+        # Upsert the results into the database
+        upsert_results(results)

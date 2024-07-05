@@ -287,15 +287,14 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"Unexpected error: {e}")
         sys.exit(1)
+
     # asin_list = [
     #     {
-    #         "id": 6,
-    #         "session_id": "d47837aa-dc2f-46ee-abf2-14fd04fd0ae7",
-    #         "organic_keywords": "International Snack Adventure, Want Want, Vicpie, Hello Kitty, Choco Stick, Meiji, Milkita, Kasugai, Smarties, Toosie, Red Hots, Skittles",
+    #         "session_id": "6766d7d3-c4f1-4f98-a331-3b92aa654ccc",
+    #         "organic_keywords": "Snack Viet, Vietnamese, Crispy, Seaweed Flavor",
     #     },
     #     {
-    #         "id": 3,
-    #         "session_id": "d47837aa-dc2f-46ee-abf2-14fd04fd0ae7",
+    #         "session_id": "6766d7d3-c4f1-4f98-a331-3b92aa654ccc",
     #         "organic_keywords": "Snack Viet, Vietnamese, Crispy, Seaweed Flavor,  Lotus Root Snack",
     #     },
     # ]
