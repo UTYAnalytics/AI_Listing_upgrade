@@ -60,11 +60,11 @@ def upsert_results(results):
                 """
                 UPDATE auto_listing_table
                 SET keyword = %s
-                WHERE id = %s AND session_id = %s
+                WHERE organic_keywords = %s AND session_id = %s
                 """,
                 (
                     result["keyword"],
-                    result["id"],
+                    result["organic_keywords"],
                     result["session_id"],
                 ),
             )
@@ -83,9 +83,7 @@ def scrap_amazon_keyword(driver, df_keywords, keyword_list=[]):
         keywords = row["organic_keywords"].split(", ")
         at_session = row["session_id"]
         for keyword in keywords:
-            keyword_list.append(
-                {"synonyms_keyword": keyword, "id": row["id"], "session_id": at_session}
-            )
+            keyword_list.append({"synonyms_keyword": keyword, "session_id": at_session})
 
     datas_keyword = pd.DataFrame(keyword_list)
 
@@ -123,7 +121,6 @@ def scrap_amazon_keyword(driver, df_keywords, keyword_list=[]):
 
             # Add result to the list
             result = {
-                "id": data_item["id"],
                 "session_id": data_item["session_id"],
                 "keyword": combined_suggestions,
             }

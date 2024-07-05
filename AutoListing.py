@@ -196,7 +196,7 @@ def execute(df):
                 st.success(f"Xử lý data - Xong !")
                 save_to_supabase(df, at_session)
                 # Select required columns for processing
-                user_keywords = df[["id", "session_id", "organic_keywords"]]
+                user_keywords = df[["session_id", "organic_keywords"]]
                 if not user_keywords.empty:
                     with st.spinner("Processing..."):
                         # Split DataFrame into subsets of 1 row each
