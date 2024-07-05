@@ -208,7 +208,7 @@ def execute(df):
                         # Trigger GitHub workflow for each subset
                         for subset in subsets:
                             print(f"Triggering GitHub workflow with subset: {subset}")
-                            trigger_github_workflow([subset], GITHUB_TOKEN)
+                            trigger_github_workflow(subset, GITHUB_TOKEN)
 
                         st.info(
                             "Waiting for all Keywords to be present in the database..."
