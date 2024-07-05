@@ -35,5 +35,6 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          echo "Processing ASIN: ${{ github.event.inputs.asin_list }}"
-          python main_process_data.py '${{ github.event.inputs.asin_list }}'
+          asin_list='${{ github.event.inputs.asin_list }}'
+          echo "Processing ASIN: ${asin_list}"
+          python main_process_data.py "${asin_list}"
