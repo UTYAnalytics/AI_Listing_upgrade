@@ -96,9 +96,21 @@ def scrap_amazon_keyword(driver, df_keywords):
             )
 
             # Wait for the search input field to be visible
-            search_box = WebDriverWait(driver, 30).until(
-                EC.visibility_of_element_located((By.ID, "twotabsearchtextbox"))
-            )
+            try:
+                search_box = WebDriverWait(driver, 10).until(
+                    EC.visibility_of_element_located((By.ID, "twotabsearchtextbox"))
+                )
+                print("Search box found by ID")
+            except TimeoutException:
+                print("Timed out waiting for the search input field to load by ID")
+                try:
+                    search_box = WebDriverWait(driver, 10).until(
+                        EC.visibility_of_element_located((By.NAME, "field-keywords"))
+                    )
+                    print("Search box found by NAME")
+                except TimeoutException:
+                    print("Timed out waiting for the search input field to load by NAME")
+                    continue
 
             # Clear the search box and enter the keyword
             search_box.clear()
