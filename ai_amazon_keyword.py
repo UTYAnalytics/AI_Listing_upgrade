@@ -107,7 +107,7 @@ def scrap_amazon_keyword(driver, df_keywords):
             try:
                 # Wait for the suggestions dropdown to be visible
                 suggestions = WebDriverWait(driver, 10).until(
-                    EC.visibility_of_element_located((By.ID, "nav-flyout-searchAjax"))
+                    EC.visibility_of_element_located((By.CLASS_NAME, "two-pane-results-container"))
                 )
                 time.sleep(10)
 
