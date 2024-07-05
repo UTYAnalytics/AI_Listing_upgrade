@@ -16,7 +16,7 @@ from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.common.action_chains import ActionChains
 from config import config, get_newest_file
 import glob
-
+import traceback
 # Initialize Supabase client
 supabase = config.supabase
 
@@ -128,6 +128,7 @@ def scrap_amazon_keyword(driver, df_keywords):
 
             except Exception as e:
                 print(f"Error while searching for {data_item['synonyms_keyword']}: {e}")
+                traceback.print_exc()
 
         # Combine all collected suggestions into a single comma-separated string without duplicates
         combined_suggestions = ", ".join(
