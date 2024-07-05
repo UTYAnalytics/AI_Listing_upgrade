@@ -35,6 +35,7 @@ from ultis_scrap_helium_cerebro import (
 )
 from ai_amazon_keyword import scrap_amazon_keyword
 from ultis_sellersprite_reverse_asin import scrap_sellersprite_asin_keyword
+import json
 
 # Initialize Supabase client
 supabase = config.supabase
@@ -229,21 +230,27 @@ def clear_session_and_refresh(driver):
     driver.execute_script("window.sessionStorage.clear();")
 
 
-def start_driver(asin):
+def start_driver(asins):
     # chrome_service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(options=chrome_options)
     try:
         print("captcha_solver")
         captcha_solver(driver, chrome_options)
         print("process_data")
-        # scrap_helium_asin_keyword(driver, fetch_asin_tokeyword(asin), download_dir)
-        scrap_amazon_keyword(driver, asin)
-        driver.quit()
+        
+        # Convert asins to DataFrame if it's not already
+        if isinstance(asins, dict):
+            df_keywords = pd.DataFrame([asins])
+        elif isinstance(asins, list):
+            df_keywords = pd.DataFrame(asins)
+        else:
+            raise ValueError("Invalid type for asins. Expected dict or list of dicts.")
+        
+        scrap_amazon_keyword(driver, df_keywords)
         update_keyword_auto_listing()
         time.sleep(10)
     finally:
         driver.quit()
-
 
 def main(asins):
     try:
@@ -254,10 +261,9 @@ def main(asins):
         traceback.print_exc()
         return False
 
-
 if __name__ == "__main__":
     print(sys.argv[1])
-    asin_list = sys.argv[1]
+    asin_list = json.loads(sys.argv[1])
     success = main(asin_list)
     if not success:
         sys.exit(1)
