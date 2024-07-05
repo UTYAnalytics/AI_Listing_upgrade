@@ -91,7 +91,7 @@ def scrap_amazon_keyword(driver, df_keywords):
         datas_keyword = pd.DataFrame(keyword_list)
 
         for index, data_item in datas_keyword.iterrows():
-            driver.get(f"https://www.amazon.com/s?k={data_item['synonyms_keyword']")
+            driver.get(f"https://www.amazon.com/s?k={data_item['synonyms_keyword']}")
             print(
                 f"Navigated to https://www.amazon.com/s?k={data_item['synonyms_keyword']}"
             )
