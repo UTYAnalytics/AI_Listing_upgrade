@@ -146,7 +146,7 @@ def scrap_helium_asin_keyword(
     driver,
     asin,
     download_dir,
-    username="forheliumonly@gmail.com",
+    username="greatwallpurchasingdept@thebargainvillage.com",
     password="qz6EvRm65L3HdjM2!!@#$",
 ):
     asin_parent, subsets = asin
