@@ -113,11 +113,11 @@ def captcha_solver(driver, chrome_options, API="7f97e318653cc85d2d7bc5efdfb1ea9f
         )
         save_button.click()
         time.sleep(1)
-        # Interact with the radio buttons
-        token_radio_button = wait.until(
-            EC.element_to_be_clickable((By.CLASS_NAME, "ant-radio-button-wrapper"))
-        )
-        token_radio_button.click()
+        # # Interact with the radio buttons
+        # token_radio_button = wait.until(
+        #     EC.element_to_be_clickable((By.CLASS_NAME, "ant-radio-button-wrapper"))
+        # )
+        # token_radio_button.click()
     except Exception as e:
         # raise Exception
         print("Error during captcha:", e)
@@ -158,10 +158,10 @@ def scrap_helium_asin_keyword(
         wait = WebDriverWait(driver, 30)
         print("login")
         username_field = wait.until(
-            EC.visibility_of_element_located((By.ID, "loginform-email"))
+            EC.visibility_of_element_located((By.CSS_SELECTOR, "#loginform-email"))
         )
         username_field.send_keys(username)
-        password_field = driver.find_element(By.ID, "loginform-password")
+        password_field = driver.find_element(By.CSS_SELECTOR, "#loginform-password")
         password_field.send_keys(password)
         # Find the button by its class name (assuming class name is unique enough here)
         status_ready = False
@@ -188,7 +188,7 @@ def scrap_helium_asin_keyword(
                     time.sleep(1)
                     login_button = WebDriverWait(driver, 3000000).until(
                         EC.visibility_of_element_located(
-                            (By.CLASS_NAME, "btn-secondary")
+                            (By.CSS_SELECTOR, "button.btn.btn-secondary")
                         )
                     )
                     driver.execute_script("arguments[0].click();", login_button)
@@ -211,7 +211,7 @@ def scrap_helium_asin_keyword(
                         print("Element not visible")
         time.sleep(2)
         login_button = WebDriverWait(driver, 3000000).until(
-            EC.visibility_of_element_located((By.CLASS_NAME, "btn-secondary"))
+            EC.visibility_of_element_located((By.CSS_SELECTOR, "button.btn.btn-secondary"))
         )
         driver.execute_script("arguments[0].click();", login_button)
         time.sleep(2)
