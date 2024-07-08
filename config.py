@@ -84,16 +84,15 @@ def get_newest_file(directory):
     return newest_file
 
 
-def trigger_github_workflow(asins, GITHUB_TOKEN):
+def trigger_github_workflow(asins):
     config = Config()
-    GITHUB_REPO, WORKFLOW_ID, BRANCH = config.get_github_config()
+    GITHUB_REPO, GITHUB_TOKEN, WORKFLOW_ID, BRANCH = config.get_github_config()
 
     url = f"https://api.github.com/repos/{GITHUB_REPO}/actions/workflows/{WORKFLOW_ID}/dispatches"
     headers = {
         "Accept": "application/vnd.github.v3+json",
         "Authorization": f"token {GITHUB_TOKEN}",
     }
-
     data = {"ref": BRANCH, "inputs": {"asin_list": json.dumps(asins)}}
 
     response = requests.post(url, headers=headers, json=data)
