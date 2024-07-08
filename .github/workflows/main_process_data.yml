@@ -32,48 +32,16 @@ jobs:
         run: curl ifconfig.me
 
       - name: Process ASIN with Retry
-        id: process_asin
-        timeout-minutes: 3  # Set a timeout for this step
+        id: process_asin_retry
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          echo "Processing ASIN: ${{ matrix.asin }}"
-          python main_process_data.py ${{ matrix.asin }}
-        continue-on-error: true  # Allow the job to continue even if this step fails
-
-      - name: Check if Retry Needed
-        if: steps.process_asin.outcome == 'failure'
-        run: echo "Job failed, retrying..."
-
-  retry-process-asins:
-    needs: process-asins
-    runs-on: ubuntu-latest
-    container: utydata02/ai-listing-uty:latest
-    if: needs.process-asins.outcome == 'failure'  # Only run if the first job failed
-    strategy:
-      matrix:
-        asin: ${{ fromJson(github.event.inputs.asin_list) }}
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v2
-
-      - name: Set up VPN configuration
-        run: |
-          echo "${{ secrets.VPN_CONFIG }}" | base64 --decode > vpn-config.ovpn
-          echo -e "${{ secrets.VPN_USERNAME }}\n${{ secrets.VPN_PASSWORD }}" > vpn-auth.txt
-
-      - name: Connect to VPN
-        run: |
-          openvpn --config vpn-config.ovpn --auth-user-pass vpn-auth.txt --daemon
-          sleep 5  # Wait for the VPN to establish
-
-      - name: Verify VPN connection
-        run: curl ifconfig.me
-
-      - name: Process ASIN Retry
-        timeout-minutes: 3  # Set a timeout for this step
-        env:
-          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
-        run: |
-          echo "Retrying processing ASIN: ${{ matrix.asin }}"
-          python main_process_data.py ${{ matrix.asin }}
+          RETRIES=3
+          for i in $(seq 1 $RETRIES); do
+            echo "Attempt $i"
+            timeout 180s python main_process_data.py ${{ matrix.asin }} && break || echo "Attempt $i failed. Retrying..."
+            if [ $i -eq $RETRIES ]; then
+              echo "All attempts failed."
+              exit 1
+            fi
+          done
