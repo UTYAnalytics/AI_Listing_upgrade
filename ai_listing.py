@@ -274,6 +274,35 @@ def listing(session_id):
     results = ai_system.process_data(session_id=session_id)
     ai_system.upsert_results(results)
 
+    # Retry mechanism for entries with null title or description
+    retries = 3
+    for _ in range(retries):
+        null_results = [
+            result
+            for result in results
+            if not result["title"] or not result["description"]
+        ]
+        if not null_results:
+            break
+        for null_result in null_results:
+            product_name = null_result["name"]
+            pack = null_result["pack"]
+            organic_keys = null_result["organic_keywords"].split(", ")
+            auto_keys = null_result["keyword"].split(", ")
+            customers = null_result["customer"].split(", ")
+
+            retry_result = ai_system.get_response(
+                product_name=product_name,
+                pack=pack,
+                organic_keys=organic_keys,
+                auto_keys=auto_keys,
+                customers=customers,
+            )
+            null_result["title"] = retry_result["title"]
+            null_result["description"] = retry_result["description"]
+
+        ai_system.upsert_results(null_results)
+
     formatted_results = ""
     for result in results:
         formatted_results += f"\n\nTitle: {result['title']}\n\n"
