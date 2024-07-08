@@ -148,7 +148,7 @@ class AILising:
                 """
                     SELECT id, sys_run_date, asin, name, customer, insert_date, keyword, pack, session_id, organic_keywords 
                     FROM auto_listing_table 
-                    WHERE session_id=%s
+                    WHERE session_id=%s and where title is null
                 """,
                 (session_id,),
             )
@@ -285,19 +285,7 @@ def listing(session_id):
         if not null_results:
             break
         for null_result in null_results:
-            product_name = null_result["name"]
-            pack = null_result["pack"]
-            organic_keys = null_result["organic_keywords"].split(", ")
-            auto_keys = null_result["keyword"].split(", ")
-            customers = null_result["customer"].split(", ")
-
-            retry_result = ai_system.get_response(
-                product_name=product_name,
-                pack=pack,
-                organic_keys=organic_keys,
-                auto_keys=auto_keys,
-                customers=customers,
-            )
+            retry_result = ai_system.process_data(session_id=session_id)
             null_result["title"] = retry_result["title"]
             null_result["description"] = retry_result["description"]
 
@@ -312,7 +300,7 @@ def listing(session_id):
 
 
 # # Example usage
-# if __name__ == '__main__':
+# if __name__ == '__main__':st
 #     session_id = "104848ca-1d2c-459e-921d-9c5cbcfeb005"
 #     results = listing(session_id)
 
