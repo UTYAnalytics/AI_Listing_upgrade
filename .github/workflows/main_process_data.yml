@@ -49,7 +49,7 @@ jobs:
     needs: process-asins
     runs-on: ubuntu-latest
     container: utydata02/ai-listing-uty:latest
-    if: needs.process-asins.result == 'failure'  # Only run if the first job failed
+    if: needs.process-asins.outcome == 'failure'  # Only run if the first job failed
     strategy:
       matrix:
         asin: ${{ fromJson(github.event.inputs.asin_list) }}
