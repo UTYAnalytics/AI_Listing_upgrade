@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       asin_list:
-        description: "JSON array of ASINs with id, session_id, and organic_keywords"
+        description: "Comma-separated list of ASINs"
         required: true
 
 jobs:
