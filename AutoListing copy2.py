@@ -33,7 +33,11 @@ from ultis_scrap_helium_cerebro import (
     captcha_solver,
     scrap_helium_asin_keyword,
 )
-from main_process_data import fetch_existing_relevant_asin_main, main
+from main_process_data import (
+    fetch_existing_relevant_asin_main,
+    main,
+    fetch_existing_relevant_keyword_main,
+)
 from plotly.subplots import make_subplots
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
@@ -191,49 +195,56 @@ def execute(df):
                 df = df[headers]
                 st.success(f"Xử lý data - Xong !")
                 save_to_supabase(df, at_session)
-                user_asins = df["asin"]
-                # get_asin_auto_listing_table()
-                asin_to_keywords2 = [
-                    asin1
-                    for asin1 in user_asins
-                    if asin1 not in fetch_existing_relevant_asin_main()
-                ]
-                # get_asin_auto_listing_table()
-                if asin_to_keywords2:
+                # Select required columns for processing
+                user_keywords = df[["session_id", "organic_keywords"]]
+                if not user_keywords.empty:
                     with st.spinner("Processing..."):
-                        # Splitting asin_to_keywords2 into subsets of 2 ASINs each
+                        # Split DataFrame into subsets of 1 row each
                         subsets = [
-                            asin_to_keywords2[i : i + 1]
-                            for i in range(0, len(asin_to_keywords2), 1)
+                            user_keywords.iloc[i : i + 1].to_dict(orient="records")[0]
+                            for i in range(0, len(user_keywords), 1)
                         ]
+
+                        # Trigger GitHub workflow for each subset
                         for subset in subsets:
+                            print(f"Triggering GitHub workflow with subset: {subset}")
                             trigger_github_workflow(subset, GITHUB_TOKEN)
 
                         st.info(
-                            "Waiting for all ASINs to be present in the database..."
+                            "Waiting for all Keywords to be present in the database..."
                         )
+
+                        # Wait for all keywords to be present in the database
                         success = False
                         while not success:
                             try:
-                                fetched_asins = fetch_existing_relevant_asin_main()
-                                if all_asins_present(fetched_asins, asin_to_keywords2):
+                                fetched_asins = fetch_existing_relevant_keyword_main(
+                                    at_session
+                                )
+                                if all_asins_present(
+                                    fetched_asins, user_keywords["organic_keywords"]
+                                ):
                                     success = True
                                     st.success(
-                                        "Completed triggering GitHub workflow for ASINs"
+                                        "Completed triggering GitHub workflow for Keywords"
                                     )
                                     time.sleep(
                                         2
-                                    )  # Wait for 5 seconds before checking again
+                                    )  # Wait for 2 seconds before checking again
                             except Exception as e:
                                 st.error(f"An error occurred: {e}")
-                while True:
-                    if not get_keyword_session(at_session).empty:
-                        list_results, _ = listing(at_session)
-                        df_results = pd.DataFrame(list_results)
-                        break
 
-                if not df_results.empty:
-                    st.write(df_results)
+                    # Fetch and display results once keywords are present
+                    while True:
+                        if not get_keyword_session(at_session).empty:
+                            list_results, _ = listing(at_session)
+                            df_results = pd.DataFrame(list_results)
+                            break
+
+                    if not df_results.empty:
+                        st.write(df_results)
+                else:
+                    st.error("Please enter your keyword")
 
 
 def all_asins_present(fetched_asins, required_asins):

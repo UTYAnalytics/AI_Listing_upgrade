@@ -238,15 +238,16 @@ def start_driver(asins):
         captcha_solver(driver, chrome_options)
         print("process_data")
 
-        # Convert asins to DataFrame if it's not already
-        if isinstance(asins, dict):
-            df_keywords = pd.DataFrame([asins])
-        elif isinstance(asins, list):
-            df_keywords = pd.DataFrame(asins)
-        else:
-            raise ValueError("Invalid type for asins. Expected dict or list of dicts.")
+        # # Convert asins to DataFrame if it's not already
+        # if isinstance(asins, dict):
+        #     df_keywords = pd.DataFrame([asins])
+        # elif isinstance(asins, list):
+        #     df_keywords = pd.DataFrame(asins)
+        # else:
+        #     raise ValueError("Invalid type for asins. Expected dict or list of dicts.")
 
-        scrap_amazon_keyword(driver, df_keywords)
+        # scrap_amazon_keyword(driver, df_keywords)
+        scrap_helium_asin_keyword(driver, fetch_asin_tokeyword(asins), download_dir)
         update_keyword_auto_listing()
         time.sleep(10)
     finally:
@@ -264,29 +265,36 @@ def main(asins):
 
 
 if __name__ == "__main__":
-    if len(sys.argv) < 2:
-        print("Error: No ASIN list provided.")
+
+    print(sys.argv[1])
+    asin_list = sys.argv[1]
+    success = main(asin_list)
+    if not success:
         sys.exit(1)
 
-    asin_list_input = sys.argv[1]
-    print(f"Raw input: {asin_list_input}")
+    # if len(sys.argv) < 2:
+    #     print("Error: No ASIN list provided.")
+    #     sys.exit(1)
 
-    if not asin_list_input.strip():
-        print("Error: Input is empty.")
-        sys.exit(1)
+    # asin_list_input = sys.argv[1]
+    # print(f"Raw input: {asin_list_input}")
 
-    try:
-        asin_list = json.loads(asin_list_input)
-        print(f"Processing ASIN: {asin_list}")
-        success = main(asin_list)
-        if not success:
-            sys.exit(1)
-    except json.JSONDecodeError as e:
-        print(f"JSONDecodeError: {e}")
-        sys.exit(1)
-    except Exception as e:
-        print(f"Unexpected error: {e}")
-        sys.exit(1)
+    # if not asin_list_input.strip():
+    #     print("Error: Input is empty.")
+    #     sys.exit(1)
+
+    # try:
+    #     asin_list = json.loads(asin_list_input)
+    #     print(f"Processing ASIN: {asin_list}")
+    #     success = main(asin_list)
+    #     if not success:
+    #         sys.exit(1)
+    # except json.JSONDecodeError as e:
+    #     print(f"JSONDecodeError: {e}")
+    #     sys.exit(1)
+    # except Exception as e:
+    #     print(f"Unexpected error: {e}")
+    #     sys.exit(1)
 
     # asin_list = [
     #     {
