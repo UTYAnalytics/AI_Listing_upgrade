@@ -11,9 +11,12 @@ jobs:
   process-asins:
     runs-on: ubuntu-latest
     container: utydata02/ai-listing-uty:latest
+    timeout-minutes: 3  # Set timeout for the whole job
     strategy:
+      fail-fast: false
       matrix:
         asin: ${{ fromJson(github.event.inputs.asin_list) }}
+      max-attempts: 2  # Retry once if the job fails or times out
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
