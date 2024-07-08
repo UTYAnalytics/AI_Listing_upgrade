@@ -166,49 +166,49 @@ def scrap_helium_asin_keyword(
         # Find the button by its class name (assuming class name is unique enough here)
         status_ready = False
         status_login = False
-        # while not status_login:
-        #     while not status_ready:
-        #         try:
-        #             status_element = wait.until(
-        #                 EC.visibility_of_element_located(
-        #                     (By.CSS_SELECTOR, "div.cm-addon-inner span")
-        #                 )
-        #             )
-        #             status_text = status_element.text
-        #             if status_text == "Ready!":
-        #                 print("Status: Ready")
-        #                 status_ready = True
-        #             elif status_text == "In Process...":
-        #                 print("Status: In Progress")
-        #             else:
-        #                 print("Status: Unknown -", status_text)
-        #                 time.sleep(1)
-        #         except:
-        #             print("Error checking status")
-        #             time.sleep(1)
-        #             login_button = WebDriverWait(driver, 3000000).until(
-        #                 EC.visibility_of_element_located(
-        #                     (By.CLASS_NAME, "btn-secondary")
-        #                 )
-        #             )
-        #             driver.execute_script("arguments[0].click();", login_button)
-        #         if status_ready == True:
-        #             status_login = True
-        #         else:
-        #             try:
-        #                 # Wait up to 10 seconds for the element to be present and visible
-        #                 element = WebDriverWait(driver, 10).until(
-        #                     EC.visibility_of_element_located(
-        #                         (
-        #                             By.XPATH,
-        #                             "//a[@title='Dashboard' and @href='https://members.helium10.com/?accountId=1544526096']",
-        #                         )
-        #                     )
-        #                 )
-        #                 print("Element is visible")
-        #                 status_login = True
-        #             except:
-        #                 print("Element not visible")
+        while not status_login:
+            while not status_ready:
+                try:
+                    status_element = wait.until(
+                        EC.visibility_of_element_located(
+                            (By.CSS_SELECTOR, "div.cm-addon-inner span")
+                        )
+                    )
+                    status_text = status_element.text
+                    if status_text == "Ready!":
+                        print("Status: Ready")
+                        status_ready = True
+                    elif status_text == "In Process...":
+                        print("Status: In Progress")
+                    else:
+                        print("Status: Unknown -", status_text)
+                        time.sleep(1)
+                except:
+                    print("Error checking status")
+                    time.sleep(1)
+                    login_button = WebDriverWait(driver, 3000000).until(
+                        EC.visibility_of_element_located(
+                            (By.CLASS_NAME, "btn-secondary")
+                        )
+                    )
+                    driver.execute_script("arguments[0].click();", login_button)
+                if status_ready == True:
+                    status_login = True
+                else:
+                    try:
+                        # Wait up to 10 seconds for the element to be present and visible
+                        element = WebDriverWait(driver, 10).until(
+                            EC.visibility_of_element_located(
+                                (
+                                    By.XPATH,
+                                    "//a[@title='Dashboard' and @href='https://members.helium10.com/?accountId=1544526096']",
+                                )
+                            )
+                        )
+                        print("Element is visible")
+                        status_login = True
+                    except:
+                        print("Element not visible")
         time.sleep(2)
         login_button = WebDriverWait(driver, 3000000).until(
             EC.visibility_of_element_located((By.CLASS_NAME, "btn-secondary"))
