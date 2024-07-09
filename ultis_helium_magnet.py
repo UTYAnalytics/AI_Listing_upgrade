@@ -187,7 +187,7 @@ def scrap_helium_keyword_3asin(
         print("Get Keyword Button")
         getkeyword_button = wait.until(
             EC.element_to_be_clickable(
-                (By.XPATH, "//button[@data-testid='getkeywords']")
+                (By.CLASS_NAME, "sc-csKJxZ")
             )
         )
         print("Get Keyword Button_click")
