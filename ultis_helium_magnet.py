@@ -62,11 +62,11 @@ def captcha_solver(driver, chrome_options, API="7f97e318653cc85d2d7bc5efdfb1ea9f
         )
         save_button.click()
         time.sleep(1)
-        # # Interact with the radio buttons
-        # token_radio_button = wait.until(
-        #     EC.element_to_be_clickable((By.CLASS_NAME, "ant-radio-button-wrapper"))
-        # )
-        # token_radio_button.click()
+        # Interact with the radio buttons
+        token_radio_button = wait.until(
+            EC.element_to_be_clickable((By.CLASS_NAME, "ant-radio-button-wrapper"))
+        )
+        token_radio_button.click()
     except Exception as e:
         # raise Exception
         print("Error during captcha:", e)
@@ -96,7 +96,7 @@ asins = []
 
 def scrap_helium_keyword_3asin(
     driver,
-    keyword_input,
+    keyword_inputs,
     username="greatwallpurchasingdept@thebargainvillage.com",
     password="qz6EvRm65L3HdjM2!!@#$",
 ):
@@ -183,7 +183,7 @@ def scrap_helium_keyword_3asin(
             )
         )
         keyword_input.clear()
-        keyword_input.send_keys(keyword_input)
+        keyword_input.send_keys(keyword_inputs)
         time.sleep(1)
         keyword_input.send_keys(Keys.RETURN)
 
@@ -211,22 +211,20 @@ def scrap_helium_keyword_3asin(
         except TimeoutException:
             print("Popup not found within the timeout period.")
         # driver.get_screenshot_as_file("screenshot.png")
-        element = WebDriverWait(driver, 60000).until(
-            EC.presence_of_element_located(
-                (By.XPATH, "//button[@data-testid='exportdata']")
-            )
+        # Define the XPath to locate the button element
+        element_scroll = WebDriverWait(driver, 600000000).until(
+            EC.visibility_of_element_located((By.CSS_SELECTOR, ".sc-kMdmNJ"))
         )
-        driver.execute_script("arguments[0].scrollIntoView();", element)
+        driver.execute_script("arguments[0].scrollIntoView();", element_scroll)
 
         print("Click View Top Products")
-
-        # Define the XPath to locate the button element
+        time.sleep(5)
         view_product_button_xpath = (
             '//button[@data-testid="viewproductsfrequentlyboughttogether"]'
         )
         # Find the button element
-        view_product_button_element = driver.find_element(
-            By.XPATH, view_product_button_xpath
+        view_product_button_element = WebDriverWait(driver, 600000000).until(
+            EC.visibility_of_element_located((By.XPATH, view_product_button_xpath))
         )
         # Click the button
         view_product_button_element.click()
@@ -254,7 +252,7 @@ def scrap_helium_keyword_3asin(
                 print(f"An error occurred: {e}")
         # Create the desired JSON structure
         output = {
-            "keyword_input": keyword_input,
+            "keyword_parent": keyword_inputs,
             "asin_parent": ", ".join(asins),
             "subsets": asins,
         }

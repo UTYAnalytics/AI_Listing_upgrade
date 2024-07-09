@@ -220,18 +220,22 @@ def start_driver(keyword):
         print("process_data")
         result = scrap_helium_keyword_3asin(driver, keyword)
         asin_subsets = result["subsets"]
-        print("Running scrap_helium_asin_keyword for subsets:", asin_subsets)
-
         time.sleep(10)
         return driver, result, asin_subsets, download_dir
-    finally:
-        driver.quit()
+    except Exception as e:
+        print(f"An error occurred in scrap_helium_keyword_3asin: {e}")
+        traceback.print_exc()
+        raise
 
 
 def main(keywords):
     try:
         driver, result, asin_subsets, download_dir = start_driver(keywords)
-        return True, driver, result, asin_subsets, download_dir
+        driver_info = {
+            "session_id": driver.session_id,
+            "executor_url": driver.command_executor._url,
+        }
+        return True, driver_info, result, asin_subsets, download_dir
     except Exception as e:
         print(f"An error occurred: {e}")
         traceback.print_exc()
@@ -241,8 +245,8 @@ def main(keywords):
 if __name__ == "__main__":
 
     print(sys.argv[1])
-    keyword = sys.argv[1]
-    success, driver, result, asin_subsets, download_dir = main(keyword)
+    keyword_input = sys.argv[1]
+    success, driver, result, asin_subsets, download_dir = main(keyword_input)
     if success:
         output = {
             "driver": driver,

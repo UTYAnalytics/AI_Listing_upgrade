@@ -49,10 +49,26 @@ def wait_for_download_complete(download_dir, keyword, timeout=60):
         time.sleep(1)
     return None
 
+def reuse_driver(driver_info):
+    session_id = driver_info["session_id"]
+    executor_url = driver_info["executor_url"]
 
-def scrap_helium_asin_keyword(driver, result, asin_subsets, download_dir):
+    # Recreate the driver instance
+    original_execute = webdriver.remote.webdriver.WebDriver.execute
+    def new_command_execute(self, command, params=None):
+        if command == "newSession":
+            return {"sessionId": session_id, "status": 0, "value": None}
+        return original_execute(self, command, params)
+    webdriver.remote.webdriver.WebDriver.execute = new_command_execute
+    driver = webdriver.Remote(command_executor=executor_url, desired_capabilities={})
+    driver.session_id = session_id
+    webdriver.remote.webdriver.WebDriver.execute = original_execute
+
+    return driver
+
+def scrap_helium_asin_keyword(driver_info, result, asin_subsets, download_dir):
     asin_parent, subsets = result["asin_parent"], asin_subsets
-
+    driver = reuse_driver(driver_info)
     # Login process
     # try:
     # Open Helium10
@@ -73,7 +89,7 @@ def scrap_helium_asin_keyword(driver, result, asin_subsets, download_dir):
         asin_input.send_keys(subsets)
         time.sleep(1)
         asin_input.send_keys(Keys.SPACE)
-
+        
         print("Get Keyword Button")
         getkeyword_button = wait.until(
             EC.element_to_be_clickable(
