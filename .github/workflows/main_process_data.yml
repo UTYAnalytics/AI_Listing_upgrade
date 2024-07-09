@@ -45,17 +45,19 @@ jobs:
           for i in $(seq 1 $RETRIES); do
             echo "Attempt $i"
             output=$(timeout 180s python main_process_data.py ${{ matrix.keywords }})
-            if [ $? -eq 0 ]; then
+            status=$?
+            if [ $status -eq 0 ]; then
+              echo "Attempt $i succeeded."
               break
             else
-              echo "Attempt $i failed. Retrying..."
+              echo "Attempt $i failed with status $status. Retrying..."
             fi
             if [ $i -eq $RETRIES ]; then
               echo "All attempts failed."
               exit 1
             fi
           done
-          echo "Processing keyword: ${{ matrix.keyword }}"
+          echo "Processing keyword: ${{ matrix.keywords }}"
           echo "Output: $output"
           result=$(echo $output | jq -c '.result')
           asin_subsets=$(echo $output | jq -c '.asin_subsets')
@@ -63,7 +65,7 @@ jobs:
           echo "::set-output name=driver::$(echo $output | jq -c '.driver')"
           echo "::set-output name=result::$result"
           echo "::set-output name=asin_subsets::$asin_subsets"
-          echo "::set-output name=download_dir::$download_dir"
+          echo "::set-output name=download_dir::$download_dir
 
   process-asins:
     needs: process-keywords
