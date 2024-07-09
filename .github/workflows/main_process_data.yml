@@ -3,7 +3,7 @@ name: Process Keywords and ASINs
 on:
   workflow_dispatch:
     inputs:
-      asin_list:
+      keyword_list:
         description: "Comma-separated list of Keyword & ASINs"
         required: true
 
