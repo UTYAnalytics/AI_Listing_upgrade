@@ -182,7 +182,7 @@ def scrap_helium_keyword_3asin(
         keyword_input.clear()
         keyword_input.send_keys(keyword_inputs)
         time.sleep(1)
-        keyword_input.send_keys(Keys.RETURN)
+        # keyword_input.send_keys(Keys.RETURN)
 
         print("Get Keyword Button")
         getkeyword_button = wait.until(
