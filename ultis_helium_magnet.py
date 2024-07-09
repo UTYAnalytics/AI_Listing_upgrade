@@ -176,7 +176,7 @@ def scrap_helium_keyword_3asin(
         print("keywordinput")
         keyword_input = WebDriverWait(driver, 300000).until(
             EC.visibility_of_element_located(
-                (By.XPATH, '//*[contains(@class, "sc-csKJxZ")]')
+                (By.XPATH, '//*[contains(@placeholder, "Enter ")]')
             )
         )
         keyword_input.clear()
