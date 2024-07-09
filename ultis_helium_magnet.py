@@ -176,7 +176,7 @@ def scrap_helium_keyword_3asin(
         print("keywordinput")
         keyword_input = WebDriverWait(driver, 3000000).until(
             EC.visibility_of_element_located(
-                (By.CSS_SELECTOR, 'input[placeholder="Enter a keyword"]')
+                (By.CLASS_NAME, 'sc-csKJxZ')
             )
         )
         keyword_input.clear()
@@ -187,7 +187,7 @@ def scrap_helium_keyword_3asin(
         print("Get Keyword Button")
         getkeyword_button = wait.until(
             EC.element_to_be_clickable(
-                (By.CLASS_NAME, "sc-csKJxZ")
+                (By.XPATH, "//button[@data-testid='getkeywords']")
             )
         )
         print("Get Keyword Button_click")
