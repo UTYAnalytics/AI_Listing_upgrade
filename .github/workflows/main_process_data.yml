@@ -69,9 +69,18 @@ jobs:
           echo "::set-output name=asin_subsets::$asin_subsets"
           echo "::set-output name=download_dir::$download_dir"
 
+      - name: Process ASINs with Retry
+        id: process_asin_retry
+        env:
+          DRIVER: ${{ steps.process_keyword_retry.outputs.driver }}
+          RESULT: ${{ steps.process_keyword_retry.outputs.result }}
+          ASIN_SUBSETS: ${{ steps.process_keyword_retry.outputs.asin_subsets }}
+          DOWNLOAD_DIR: ${{ steps.process_keyword_retry.outputs.download_dir }}
+        run: |
+          RETRIES=3
           for i in $(seq 1 $RETRIES); do
             echo "Attempt $i for ASINs"
-            output=$(timeout 180s python asin_main_process_data.py "$(echo $output | jq -r '.driver')" "$(echo $output | jq -r '.result')" "$(echo $output | jq -r '.asin_subsets')" "$(echo $output | jq -r '.download_dir')")
+            output=$(timeout 180s python asin_main_process_data.py "${{ env.DRIVER }}" "${{ env.RESULT }}" "${{ env.ASIN_SUBSETS }}" "${{ env.DOWNLOAD_DIR }}")
             status=$?
             if [ $status -eq 0 ]; then
               echo "Attempt $i for ASINs succeeded."
@@ -81,7 +90,7 @@ jobs:
             else
               echo "Attempt $i for ASINs failed with status $status. Retrying..."
             fi
-            if [ $i -eq $RETRIES ]; then
+            if [ $i -eq $RETRIES]; then
               echo "All attempts for ASINs failed."
               exit 1
             fi
