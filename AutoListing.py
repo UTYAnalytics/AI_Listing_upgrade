@@ -180,12 +180,10 @@ def execute(df):
                         )
                         success = False
                         while not success:
-                            st.success(success)
                             try:
                                 fetched_keywords = fetch_existing_relevant_asin_main(
                                     "keyword"
                                 )
-                                st.success(all_asins_present(fetched_keywords, user_keywords))
                                 if all_asins_present(fetched_keywords, user_keywords):
                                     success = True
                                     st.success(
