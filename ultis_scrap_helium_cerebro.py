@@ -16,7 +16,7 @@ from multiprocessing import Pool
 from selenium.common.exceptions import TimeoutException
 import traceback
 from selenium.webdriver.common.action_chains import ActionChains
-from config import config, get_newest_file
+from config import config
 import glob
 
 # Initialize Supabase client
@@ -29,98 +29,6 @@ current_time_gmt7 = config.current_time_gmt7
 extension_path, extension_id = config.get_paths_config()
 
 db_config = config.get_database_config()
-
-
-def fetch_asin_tokeyword(asin):
-    # conn = None
-    # try:
-    #     # Connect to your database
-    #     conn = psycopg2.connect(
-    #         dbname=db_config["dbname"],
-    #         user=db_config["user"],
-    #         password=db_config["password"],
-    #         host=db_config["host"],
-    #     )
-    #     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
-    #     # Execute a query
-    #     cur.execute(
-    #         """
-    #         WITH split_asins AS (
-    #             SELECT unnest(string_to_array(asin, ',')) AS asin_element
-    #             FROM reverse_product_lookup_helium
-    #         )
-    #         SELECT a.*
-    #         FROM products_smartscount a
-    #         LEFT JOIN products_relevant_smartscounts b
-    #         ON a.asin = b.asin_relevant AND a.sys_run_date = b.sys_run_date
-    #         WHERE a.sys_run_date = %s AND b.asin = %s
-    #         AND a.asin not in (select distinct asin_element from split_asins)
-    #         AND b.relevancy_score > 9
-    #         ORDER BY a.estimated_monthly_revenue DESC
-    #         LIMIT 10
-    #         """,
-    #         (
-    #             str(current_time_gmt7.strftime("%Y-%m-%d")),
-    #             asin,
-    #         ),
-    #     )
-
-    #     # Fetch all results
-    #     results = cur.fetchall()
-    #     # Extract the asin values from the results
-    #     asins = [item["asin"] for item in results]
-    #     # subset_size = 10
-    #     subsets = ", ".join(asins)
-    #     asin_parent = asin
-    #     return asin_parent, subsets
-    # except Exception as e:
-    #     print(f"Database error: {e}")
-    #     return []
-    # finally:
-    #     if conn:
-    #         conn.close()
-    return asin, asin
-
-
-def captcha_solver(driver, chrome_options, API="7f97e318653cc85d2d7bc5efdfb1ea9f"):
-    # Create a temporary Chrome user data directory
-    user_data_dir = os.path.join(os.getcwd(), "temp_user_data_dir")
-    os.makedirs(user_data_dir, exist_ok=True)
-    chrome_options.add_extension(extension_path)
-    chrome_options.add_argument(f"user-data-dir={user_data_dir}")
-    # Navigate to the extension's URL
-    extension_url = f"chrome-extension://{extension_id}/popup.html"  # Replace 'popup.html' with your extension's specific page if different
-    driver.get(extension_url)
-
-    # Interact with the extension's elements
-    try:
-        # Example: Input text into a text field
-        wait = WebDriverWait(driver, 10)
-        input_field = wait.until(
-            EC.visibility_of_element_located(
-                (By.CSS_SELECTOR, "input#client-key-input")
-            )
-        )
-
-        # Enter text into the input field
-        input_text = API
-        input_field.clear()
-        input_field.send_keys(input_text)
-
-        # Wait for the save button to be clickable, then click it
-        save_button = wait.until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, "button#client-key-save-btn"))
-        )
-        save_button.click()
-        time.sleep(1)
-        # Interact with the radio buttons
-        token_radio_button = wait.until(
-            EC.element_to_be_clickable((By.CLASS_NAME, "ant-radio-button-wrapper"))
-        )
-        token_radio_button.click()
-    except Exception as e:
-        # raise Exception
-        print("Error during captcha:", e)
 
 
 def wait_for_download_complete(download_dir, keyword, timeout=60):
@@ -142,86 +50,15 @@ def wait_for_download_complete(download_dir, keyword, timeout=60):
     return None
 
 
-def scrap_helium_asin_keyword(
-    driver,
-    asin,
-    download_dir,
-    username="greatwallpurchasingdept@thebargainvillage.com",
-    password="qz6EvRm65L3HdjM2!!@#$",
-):
-    asin_parent, subsets = asin
+def scrap_helium_asin_keyword(driver, result, asin_subsets, download_dir):
+    asin_parent, subsets = result["asin_parent"], asin_subsets
 
     # Login process
-    try:
-        # Open Helium10
-        driver.get("https://members.helium10.com/cerebro?accountId=1544526096")
-        wait = WebDriverWait(driver, 30)
-        print("login")
-        username_field = wait.until(
-            EC.visibility_of_element_located((By.ID, "loginform-email"))
-        )
-        username_field.send_keys(username)
-        password_field = driver.find_element(By.ID, "loginform-password")
-        password_field.send_keys(password)
-        # Find the button by its class name (assuming class name is unique enough here)
-        status_ready = False
-        status_login = False
-        while not status_login:
-            while not status_ready:
-                try:
-                    status_element = wait.until(
-                        EC.visibility_of_element_located(
-                            (By.CSS_SELECTOR, "div.cm-addon-inner span")
-                        )
-                    )
-                    status_text = status_element.text
-                    if status_text == "Ready!":
-                        print("Status: Ready")
-                        status_ready = True
-                    elif status_text == "In Process...":
-                        print("Status: In Progress")
-                    else:
-                        print("Status: Unknown -", status_text)
-                        time.sleep(1)
-                except:
-                    print("Error checking status")
-                    time.sleep(1)
-                    login_button = WebDriverWait(driver, 3000000).until(
-                        EC.visibility_of_element_located(
-                            (By.CLASS_NAME, "btn-secondary")
-                        )
-                    )
-                    driver.execute_script("arguments[0].click();", login_button)
-                if status_ready == True:
-                    status_login = True
-                else:
-                    try:
-                        # Wait up to 10 seconds for the element to be present and visible
-                        element = WebDriverWait(driver, 10).until(
-                            EC.visibility_of_element_located(
-                                (
-                                    By.XPATH,
-                                    "//a[@title='Dashboard' and @href='https://members.helium10.com/?accountId=1544526096']",
-                                )
-                            )
-                        )
-                        print("Element is visible")
-                        status_login = True
-                    except:
-                        print("Element not visible")
-        time.sleep(2)
-        login_button = WebDriverWait(driver, 3000000).until(
-            EC.visibility_of_element_located((By.CLASS_NAME, "btn-secondary"))
-        )
-        driver.execute_script("arguments[0].click();", login_button)
-        time.sleep(2)
-    except Exception as e:
-        print(f"Error during login: {e}")
-        traceback.print_exc()
-        return
+    # try:
+    # Open Helium10
+    driver.get("https://members.helium10.com/cerebro?accountId=1544526096")
+    wait = WebDriverWait(driver, 30)
 
-    # driver.refresh("https://members.helium10.com/cerebro?accountId=1544526096")
-    # time.sleep(5)
     try:
         print("asininput")
         asin_input = WebDriverWait(driver, 3000000).until(

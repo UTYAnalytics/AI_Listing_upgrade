@@ -8,33 +8,17 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 import os
 import time
-import pandas as pd
 import psycopg2
-import glob
-from supabase import create_client, Client
-import unicodedata
-from datetime import datetime, timedelta
-import numpy as np
-from selenium.webdriver.chrome.service import Service
 import traceback
-from webdriver_manager.chrome import ChromeDriverManager
-from multiprocessing import Pool
-from selenium.common.exceptions import TimeoutException
-import traceback
-from selenium.webdriver.common.action_chains import ActionChains
-from config import config, format_header, get_newest_file
-from ultis_get_product_smartscount import (
-    fetch_existing_relevant_asin,
-    scrap_data_smartcount_product,
-)
-from ultis_get_searchterm_smartsount import scrap_data_smartcount_relevant_product
+
+from config import config
 from ultis_scrap_helium_cerebro import (
-    fetch_asin_tokeyword,
-    captcha_solver,
     scrap_helium_asin_keyword,
 )
-from ai_amazon_keyword import scrap_amazon_keyword
-from ultis_sellersprite_reverse_asin import scrap_sellersprite_asin_keyword
+from ultis_helium_magnet import (
+    captcha_solver,
+    scrap_helium_keyword_3asin,
+)
 import json
 
 # Initialize Supabase client
@@ -72,7 +56,7 @@ with tempfile.TemporaryDirectory() as download_dir:
     chrome_options.add_extension(os.path.join(dir_path, extension_path))
 
 
-def fetch_existing_relevant_asin_main():
+def fetch_existing_relevant_asin_main(var):
     conn = None
     try:
         # Connect to your database
@@ -83,14 +67,29 @@ def fetch_existing_relevant_asin_main():
             host=db_config["host"],
         )
         cur = conn.cursor()
+        # Determine the column to fetch based on the input variable
+        if var == "asin":
+            column_to_fetch = "asin_parent"
+        elif var == "keyword":
+            column_to_fetch = "keyword_parent"
+        else:
+            print(f"Invalid input: {var}. Expected 'asin' or 'keyword'.")
+            return []
+
         # Execute a query
-        cur.execute("SELECT distinct asin FROM reverse_product_lookup_helium_2")
+        query = f"""
+            SELECT DISTINCT {column_to_fetch}
+            FROM reverse_product_lookup_helium_2
+            WHERE sys_run_date = (SELECT MAX(sys_run_date) FROM reverse_product_lookup_helium_2)
+        """
+        cur.execute(query)
 
         # Fetch all results
-        asins = cur.fetchall()
+        results = cur.fetchall()
         # Convert list of tuples to list
-        asins = [item[0] for item in asins]
-        return asins
+        results_list = [item[0] for item in results]
+        return results_list
+
     except Exception as e:
         print(f"Database error: {e}")
         return []
@@ -179,6 +178,7 @@ def update_keyword_auto_listing():
                         STRING_AGG(keyword_phrase, ', ') AS concatenated_keywords
                     FROM 
                         reverse_product_lookup_helium_2
+                    where organic_rank between 1 and 20
                     GROUP BY 
                         asin_parent
                 )
@@ -205,59 +205,33 @@ def update_keyword_auto_listing():
             conn.close()
 
 
-def smartscouts_next_login(driver, username=username, password=password):
-    driver.get("https://app.smartscout.com/sessions/signin")
-    wait = WebDriverWait(driver, 30)
-    # Login process
-    try:
-        username_field = wait.until(
-            EC.visibility_of_element_located((By.ID, "username"))
-        )
-        username_field.send_keys(username)
-
-        password_field = driver.find_element(By.ID, "password")
-        password_field.send_keys(password)
-        password_field.send_keys(Keys.RETURN)
-        time.sleep(2)
-    except Exception as e:
-        # raise Exception
-        print("Error during login:", e)
-
-
 def clear_session_and_refresh(driver):
     driver.delete_all_cookies()
     driver.execute_script("window.localStorage.clear();")
     driver.execute_script("window.sessionStorage.clear();")
 
 
-def start_driver(asins):
+def start_driver(keyword):
     # chrome_service = Service(ChromeDriverManager().install())
     driver = webdriver.Chrome(options=chrome_options)
     try:
         print("captcha_solver")
         captcha_solver(driver, chrome_options)
         print("process_data")
+        result = scrap_helium_keyword_3asin(driver, keyword)
+        asin_subsets = result["subsets"]
+        print("Running scrap_helium_asin_keyword for subsets:", asin_subsets)
 
-        # # Convert asins to DataFrame if it's not already
-        # if isinstance(asins, dict):
-        #     df_keywords = pd.DataFrame([asins])
-        # elif isinstance(asins, list):
-        #     df_keywords = pd.DataFrame(asins)
-        # else:
-        #     raise ValueError("Invalid type for asins. Expected dict or list of dicts.")
-
-        # scrap_amazon_keyword(driver, df_keywords)
-        scrap_helium_asin_keyword(driver, fetch_asin_tokeyword(asins), download_dir)
-        update_keyword_auto_listing()
         time.sleep(10)
+        return driver, result, asin_subsets, download_dir
     finally:
         driver.quit()
 
 
-def main(asins):
+def main(keywords):
     try:
-        start_driver(asins)
-        return True
+        driver, result, asin_subsets, download_dir = start_driver(keywords)
+        return True, driver, result, asin_subsets, download_dir
     except Exception as e:
         print(f"An error occurred: {e}")
         traceback.print_exc()
@@ -267,43 +241,15 @@ def main(asins):
 if __name__ == "__main__":
 
     print(sys.argv[1])
-    asin_list = sys.argv[1]
-    success = main(asin_list)
-    if not success:
+    keyword = sys.argv[1]
+    success, driver, result, asin_subsets, download_dir = main(keyword)
+    if success:
+        output = {
+            "driver": driver,
+            "result": result,
+            "asin_subsets": asin_subsets,
+            "download_dir": download_dir,
+        }
+        print(json.dumps(output))  # Output the subsets as JSON
+    else:
         sys.exit(1)
-
-    # if len(sys.argv) < 2:
-    #     print("Error: No ASIN list provided.")
-    #     sys.exit(1)
-
-    # asin_list_input = sys.argv[1]
-    # print(f"Raw input: {asin_list_input}")
-
-    # if not asin_list_input.strip():
-    #     print("Error: Input is empty.")
-    #     sys.exit(1)
-
-    # try:
-    #     asin_list = json.loads(asin_list_input)
-    #     print(f"Processing ASIN: {asin_list}")
-    #     success = main(asin_list)
-    #     if not success:
-    #         sys.exit(1)
-    # except json.JSONDecodeError as e:
-    #     print(f"JSONDecodeError: {e}")
-    #     sys.exit(1)
-    # except Exception as e:
-    #     print(f"Unexpected error: {e}")
-    #     sys.exit(1)
-
-    # asin_list = [
-    #     {
-    #         "session_id": "6766d7d3-c4f1-4f98-a331-3b92aa654ccc",
-    #         "organic_keywords": "Snack Viet, Vietnamese, Crispy, Seaweed Flavor",
-    #     },
-    #     {
-    #         "session_id": "6766d7d3-c4f1-4f98-a331-3b92aa654ccc",
-    #         "organic_keywords": "Snack Viet, Vietnamese, Crispy, Seaweed Flavor,  Lotus Root Snack",
-    #     },
-    # ]
-    # success = main(asin_list)

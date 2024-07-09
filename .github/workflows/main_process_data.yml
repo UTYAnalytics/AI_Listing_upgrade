@@ -1,19 +1,19 @@
-name: Process ASINs
+name: Process Keywords and ASINs
 
 on:
   workflow_dispatch:
     inputs:
       asin_list:
-        description: "Comma-separated list of ASINs"
+        description: "Comma-separated list of Keyword & ASINs"
         required: true
 
 jobs:
-  process-asins:
+  process-keywords:
     runs-on: ubuntu-latest
     container: utydata02/ai-listing-uty:latest
     strategy:
       matrix:
-        asin: ${{ fromJson(github.event.inputs.asin_list) }}
+        keywords: ${{ fromJson(github.event.inputs.keyword_list) }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -31,15 +31,76 @@ jobs:
       - name: Verify VPN connection
         run: curl ifconfig.me
 
-      - name: Process ASIN with Retry
-        id: process_asin_retry
+      - name: Process Keywords with Retry
+        id: process_keyword_retry
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
           RETRIES=3
           for i in $(seq 1 $RETRIES); do
             echo "Attempt $i"
-            timeout 180s python main_process_data.py ${{ matrix.asin }} && break || echo "Attempt $i failed. Retrying..."
+            output=$(timeout 120s python main_process_data.py ${{ matrix.keywords }})
+            if [ $? -eq 0 ]; then
+              break
+            else
+              echo "Attempt $i failed. Retrying..."
+            fi
+            if [ $i -eq $RETRIES ]; then
+              echo "All attempts failed."
+              exit 1
+            fi
+          done
+          echo "Processing keyword: ${{ matrix.keyword }}"
+          echo "Output: $output"
+          result=$(echo $output | jq -c '.result')
+          asin_subsets=$(echo $output | jq -c '.asin_subsets')
+          download_dir=$(echo $output | jq -c '.download_dir')
+          echo "::set-output name=driver::$(echo $output | jq -c '.driver')"
+          echo "::set-output name=result::$result"
+          echo "::set-output name=asin_subsets::$asin_subsets"
+          echo "::set-output name=download_dir::$download_dir"
+
+  process-asins:
+  needs: process-keywords
+    runs-on: ubuntu-latest
+    container: utydata02/ai-listing-uty:latest
+    strategy:
+      matrix:
+        asin: ${{ fromJson(needs.process-keywords.outputs.asin_subsets) }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up VPN configuration
+        run: |
+          echo "${{ secrets.VPN_CONFIG }}" | base64 --decode > vpn-config.ovpn
+          echo -e "${{ secrets.VPN_USERNAME }}\n${{ secrets.VPN_PASSWORD }}" > vpn-auth.txt
+
+      - name: Connect to VPN
+        run: |
+          openvpn --config vpn-config.ovpn --auth-user-pass vpn-auth.txt --daemon
+          sleep 5  # Wait for the VPN to establish
+
+      - name: Verify VPN connection
+        run: curl ifconfig.me
+
+      - name: Process Asins with Retry
+        id: process_asin_retry
+        env:
+          DRIVER: ${{ needs.process-keywords.outputs.driver }}
+          RESULT: ${{ needs.process-keywords.outputs.result }}
+          ASIN_SUBSETS: ${{ needs.process-keywords.outputs.asin_subsets }}
+          DOWNLOAD_DIR: ${{ needs.process-keywords.outputs.download_dir }}
+        run: |
+          RETRIES=3
+          for i in $(seq 1 $RETRIES); do
+            echo "Attempt $i"
+            output=$(timeout 180s python asin_main_process_data.py "${{ env.DRIVER }}" "${{ env.RESULT }}" "${{ env.ASIN_SUBSETS }}" "${{ env.DOWNLOAD_DIR }}")
+            if [ $? -eq 0 ]; then
+              break
+            else
+              echo "Attempt $i failed. Retrying..."
+            fi
             if [ $i -eq $RETRIES ]; then
               echo "All attempts failed."
               exit 1

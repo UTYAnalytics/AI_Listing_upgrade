@@ -84,7 +84,7 @@ def get_newest_file(directory):
     return newest_file
 
 
-def trigger_github_workflow(asins, GITHUB_TOKEN):
+def trigger_github_workflow(keywords, GITHUB_TOKEN):
     config = Config()
     GITHUB_REPO, WORKFLOW_ID, BRANCH = config.get_github_config()
 
@@ -94,7 +94,7 @@ def trigger_github_workflow(asins, GITHUB_TOKEN):
         "Authorization": f"token {GITHUB_TOKEN}",
     }
 
-    data = {"ref": BRANCH, "inputs": {"asin_list": json.dumps(asins)}}
+    data = {"ref": BRANCH, "inputs": {"keyword_list": json.dumps(keywords)}}
 
     response = requests.post(url, headers=headers, json=data)
     # if response.status_code == 204:

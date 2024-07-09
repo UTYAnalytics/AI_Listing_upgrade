@@ -191,32 +191,35 @@ def execute(df):
                 df = df[headers]
                 st.success(f"Xử lý data - Xong !")
                 save_to_supabase(df, at_session)
-                user_keywords = df["name"]
+                user_asins = df["asin"]
                 # get_asin_auto_listing_table()
-                keywords2 = [
-                    keyword1
-                    for keyword1 in user_keywords
-                    if keyword1 not in fetch_existing_relevant_asin_main("keyword")
+                asin_to_keywords2 = [
+                    asin1
+                    for asin1 in user_asins
+                    if asin1 not in fetch_existing_relevant_asin_main()
                 ]
-                if keywords2:
+                # get_asin_auto_listing_table()
+                if asin_to_keywords2:
                     with st.spinner("Processing..."):
+                        # Splitting asin_to_keywords2 into subsets of 2 ASINs each
                         subsets = [
-                            keywords2[i : i + 1]
-                            for i in range(0, len(keywords2), 1)
+                            asin_to_keywords2[i : i + 2]
+                            for i in range(0, len(asin_to_keywords2), 2)
                         ]
                         for subset in subsets:
                             trigger_github_workflow(subset, GITHUB_TOKEN)
+
                         st.info(
-                            "Waiting for all Keywords to be present in the database..."
+                            "Waiting for all ASINs to be present in the database..."
                         )
                         success = False
                         while not success:
                             try:
-                                fetched_keywords = fetch_existing_relevant_asin_main("keyword")
-                                if all_asins_present(fetched_keywords, user_keywords):
+                                fetched_asins = fetch_existing_relevant_asin_main()
+                                if all_asins_present(fetched_asins, asin_to_keywords2):
                                     success = True
                                     st.success(
-                                        "Completed triggering GitHub workflow for Keywords"
+                                        "Completed triggering GitHub workflow for ASINs"
                                     )
                                     time.sleep(
                                         2
