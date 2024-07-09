@@ -1,46 +1,15 @@
-import re
-import os
 import time
-import glob
 import uuid
 import psycopg2
-import tempfile
-import psycopg2
 import traceback
-import traceback
-import numpy as np
-import unicodedata
 import numpy as np
 import pandas as pd
 import streamlit as st
 import psycopg2.extras
-import plotly.graph_objs as go
-
-from selenium import webdriver
 from ai_listing import listing
-from multiprocessing import Pool
 from datetime import datetime
-from supabase import create_client, Client
-from config import config, format_header, get_newest_file, trigger_github_workflow
-from ultis_sellersprite_reverse_asin import scrap_sellersprite_asin_keyword
-from ultis_get_searchterm_smartsount import scrap_data_smartcount_relevant_product
-from ultis_get_product_smartscount import (
-    fetch_existing_relevant_asin,
-    scrap_data_smartcount_product,
-)
-from ultis_scrap_helium_cerebro import (
-    fetch_asin_tokeyword,
-    captcha_solver,
-    scrap_helium_asin_keyword,
-)
-from main_process_data import fetch_existing_relevant_asin_main, main
-from plotly.subplots import make_subplots
-from selenium.webdriver.common.by import By
-from selenium.webdriver.common.keys import Keys
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.support.ui import WebDriverWait
-from webdriver_manager.chrome import ChromeDriverManager
-from selenium.webdriver.support import expected_conditions as EC
+from config import config, trigger_github_workflow
+from main_process_data import fetch_existing_relevant_asin_main
 from st_aggrid import AgGrid, GridOptionsBuilder
 
 pd.options.plotting.backend = "plotly"
@@ -201,8 +170,7 @@ def execute(df):
                 if keywords2:
                     with st.spinner("Processing..."):
                         subsets = [
-                            keywords2[i : i + 1]
-                            for i in range(0, len(keywords2), 1)
+                            keywords2[i : i + 1] for i in range(0, len(keywords2), 1)
                         ]
                         for subset in subsets:
                             trigger_github_workflow(subset, GITHUB_TOKEN)
@@ -212,7 +180,9 @@ def execute(df):
                         success = False
                         while not success:
                             try:
-                                fetched_keywords = fetch_existing_relevant_asin_main("keyword")
+                                fetched_keywords = fetch_existing_relevant_asin_main(
+                                    "keyword"
+                                )
                                 if all_asins_present(fetched_keywords, user_keywords):
                                     success = True
                                     st.success(
