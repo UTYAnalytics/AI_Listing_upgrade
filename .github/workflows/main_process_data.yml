@@ -44,14 +44,7 @@ jobs:
           RETRIES=3
           for i in $(seq 1 $RETRIES); do
             echo "Attempt $i"
-            output=$(timeout 180s python main_process_data.py ${{ matrix.keywords }})
-            status=$?
-            if [ $status -eq 0 ]; then
-              echo "Attempt $i succeeded."
-              break
-            else
-              echo "Attempt $i failed with status $status. Retrying..."
-            fi
+            output=$(timeout 180s python main_process_data.py ${{ matrix.keywords }} && break || echo "Attempt $i failed. Retrying...")
             if [ $i -eq $RETRIES ]; then
               echo "All attempts failed."
               exit 1
