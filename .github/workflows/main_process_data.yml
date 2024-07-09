@@ -44,7 +44,15 @@ jobs:
           RETRIES=3
           for i in $(seq 1 $RETRIES); do
             echo "Attempt $i"
-            output=$(timeout 180s python main_process_data.py ${{ matrix.keywords }} && break || echo "Attempt $i failed. Retrying...")
+            output=$(timeout 180s python main_process_data.py ${{ matrix.keywords }}) || status=$?
+            if [ $status -eq 0 ]; then
+              echo "Attempt $i succeeded."
+              break
+            elif [ $status -eq 124 ]; then  # 124 is the exit code for timeout
+              echo "Attempt $i failed due to timeout. Retrying..."
+            else
+              echo "Attempt $i failed with status $status. Retrying..."
+            fi
             if [ $i -eq $RETRIES ]; then
               echo "All attempts failed."
               exit 1
@@ -58,7 +66,7 @@ jobs:
           echo "::set-output name=driver::$(echo $output | jq -c '.driver')"
           echo "::set-output name=result::$result"
           echo "::set-output name=asin_subsets::$asin_subsets"
-          echo "::set-output name=download_dir::$download_dir
+          echo "::set-output name=download_dir::$download_dir"
 
   process-asins:
     needs: process-keywords
