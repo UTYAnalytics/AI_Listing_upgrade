@@ -44,10 +44,13 @@ jobs:
           RETRIES=3
           for i in $(seq 1 $RETRIES); do
             echo "Attempt $i"
-            output=$(timeout 180s python main_process_data.py ${{ matrix.keywords }}) || status=$?
+            output=$(timeout 180s python main_process_data.py ${{ matrix.keywords }})
+            status=$?
             if [ $status -eq 0 ]; then
               echo "Attempt $i succeeded."
               break
+            elif [ $status -eq 124 ]; then  # 124 is the exit code for timeout
+              echo "Attempt $i failed due to timeout. Retrying..."
             else
               echo "Attempt $i failed with status $status. Retrying..."
             fi
@@ -68,10 +71,13 @@ jobs:
 
           for i in $(seq 1 $RETRIES); do
             echo "Attempt $i for ASINs"
-            output=$(timeout 180s python asin_main_process_data.py "$(echo $output | jq -c '.driver')" "$(echo $output | jq -c '.result')" "$(echo $output | jq -c '.asin_subsets')" "$(echo $output | jq -c '.download_dir')") || status=$?
+            output=$(timeout 180s python asin_main_process_data.py "$(echo $output | jq -r '.driver')" "$(echo $output | jq -r '.result')" "$(echo $output | jq -r '.asin_subsets')" "$(echo $output | jq -r '.download_dir')")
+            status=$?
             if [ $status -eq 0 ]; then
               echo "Attempt $i for ASINs succeeded."
               break
+            elif [ $status -eq 124 ]; then  # 124 is the exit code for timeout
+              echo "Attempt $i for ASINs failed due to timeout. Retrying..."
             else
               echo "Attempt $i for ASINs failed with status $status. Retrying..."
             fi
