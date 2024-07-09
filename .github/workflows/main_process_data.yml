@@ -17,6 +17,11 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
+      
+      - name: Install jq
+        run: |
+          apt-get update
+          apt-get install -y jq
 
       - name: Set up VPN configuration
         run: |
