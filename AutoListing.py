@@ -167,6 +167,7 @@ def execute(df):
                     for keyword1 in user_keywords
                     if keyword1 not in fetch_existing_relevant_asin_main("keyword")
                 ]
+                st.success(keywords2)
                 if keywords2:
                     with st.spinner("Processing..."):
                         subsets = [
