@@ -49,8 +49,6 @@ jobs:
             if [ $status -eq 0 ]; then
               echo "Attempt $i succeeded."
               break
-            elif [ $status -eq 124 ]; then  # 124 is the exit code for timeout
-              echo "Attempt $i failed due to timeout. Retrying..."
             else
               echo "Attempt $i failed with status $status. Retrying..."
             fi
@@ -85,8 +83,6 @@ jobs:
             if [ $status -eq 0 ]; then
               echo "Attempt $i for ASINs succeeded."
               break
-            elif [ $status -eq 124 ]; then  # 124 is the exit code for timeout
-              echo "Attempt $i for ASINs failed due to timeout. Retrying..."
             else
               echo "Attempt $i for ASINs failed with status $status. Retrying..."
             fi
