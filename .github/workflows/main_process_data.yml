@@ -45,13 +45,13 @@ jobs:
           for i in $(seq 1 $RETRIES); do
             echo "Attempt $i"
             output=$(timeout 180s python main_process_data.py ${{ matrix.keywords }}) || status=$?
-            if [[ $status -eq 0 ]]; then
+            if  $status -eq 0 ; then
               echo "Attempt $i succeeded."
               break
             else
               echo "Attempt $i failed with status $status. Retrying..."
             fi
-            if [[ $i -eq $RETRIES ]]; then
+            if  $i -eq $RETRIES ; then
               echo "All attempts failed."
               exit 1
             fi
@@ -79,13 +79,13 @@ jobs:
             echo "Attempt $i for ASINs"
             output=$(timeout 180s python asin_main_process_data.py "${{ env.DRIVER }}" "${{ env.RESULT }}" "${{ env.ASIN_SUBSETS }}" "${{ env.DOWNLOAD_DIR }}") || status=$?
             
-            if [[ $status -eq 0 ]]; then
+            if $status -eq 0 ; then
               echo "Attempt $i for ASINs succeeded."
               break
             else
               echo "Attempt $i for ASINs failed with status $status. Retrying..."
             fi
-            if [[ $i -eq $RETRIES ]]; then
+            if $i -eq $RETRIES ; then
               echo "All attempts for ASINs failed."
               exit 1
             fi
