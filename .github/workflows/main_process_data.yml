@@ -61,7 +61,7 @@ jobs:
           echo "::set-output name=download_dir::$download_dir"
 
   process-asins:
-  needs: process-keywords
+    needs: process-keywords
     runs-on: ubuntu-latest
     container: utydata02/ai-listing-uty:latest
     strategy:
