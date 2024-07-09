@@ -179,7 +179,7 @@ def scrap_helium_keyword_3asin(
                 (By.XPATH, '//div[@data-value="0"]')
             )
         )
-        keyword_input.clear()
+        # keyword_input.clear()
         keyword_input.send_keys(keyword_inputs)
         time.sleep(1)
         keyword_input.send_keys(Keys.RETURN)
