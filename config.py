@@ -97,10 +97,10 @@ def trigger_github_workflow(keywords, GITHUB_TOKEN):
     data = {"ref": BRANCH, "inputs": {"keyword_list": json.dumps(keywords)}}
 
     response = requests.post(url, headers=headers, json=data)
-    # if response.status_code == 204:
-    #     print("Workflow triggered successfully")
-    # else:
-    #     print(f"Failed to trigger workflow: {response.status_code}, {response.text}")
+    if response.status_code == 204:
+        print("Workflow triggered successfully")
+    else:
+        print(f"Failed to trigger workflow: {response.status_code}, {response.text}")
 
 
 def check_workflow_status(run_id):
