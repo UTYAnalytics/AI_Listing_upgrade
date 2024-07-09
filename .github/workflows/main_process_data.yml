@@ -61,10 +61,10 @@ jobs:
           result=$(echo $output | jq -c '.result')
           asin_subsets=$(echo $output | jq -c '.asin_subsets')
           download_dir=$(echo $output | jq -c '.download_dir')
-          echo "::set-output name=driver::$(echo $output | jq -c '.driver')"
-          echo "::set-output name=result::$result"
-          echo "::set-output name=asin_subsets::$asin_subsets"
-          echo "::set-output name=download_dir::$download_dir"
+          echo "driver=$(echo $output | jq -c '.driver')" >> $GITHUB_OUTPUT
+          echo "result=$result" >> $GITHUB_OUTPUT
+          echo "asin_subsets=$asin_subsets" >> $GITHUB_OUTPUT
+          echo "download_dir=$download_dir" >> $GITHUB_OUTPUT
 
       - name: Process ASINs with Retry
         id: process_asin_retry
@@ -85,7 +85,7 @@ jobs:
             else
               echo "Attempt $i for ASINs failed with status $status. Retrying..."
             fi
-            if [ $i -eq $RETRIES]; then
+            if [ $i -eq $RETRIES ]; then
               echo "All attempts for ASINs failed."
               exit 1
             fi
