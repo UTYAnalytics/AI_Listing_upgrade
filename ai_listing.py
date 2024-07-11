@@ -23,7 +23,7 @@ class AILising:
     def load_model(self):
         "Load the model from the Langchain-Groq"
         self.chat = ChatGroq(
-            temperature=0, groq_api_key=self.GROQ_API_KEY, model_name="mixtral-8x7b-32768"
+            temperature=0, groq_api_key=self.GROQ_API_KEY, model_name="gemma-7b-it"
         )
 
     def get_prompt(
