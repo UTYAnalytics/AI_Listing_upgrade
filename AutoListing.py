@@ -191,6 +191,7 @@ def execute(df):
                 df = df[headers]
                 st.success(f"Xử lý data - Xong !")
                 save_to_supabase(df, at_session)
+                time.sleep(5)
                 user_asins = df["asin"]
                 # get_asin_auto_listing_table()
                 asin_to_keywords2 = [
