@@ -179,7 +179,7 @@ def update_keyword_auto_listing():
                         STRING_AGG(keyword_phrase, ', ') AS concatenated_keywords
                     FROM 
                         reverse_product_lookup_helium_2
-                        where organice rank is not null and h10_ppc_sugg_min_bid is not null and competing_products <=500
+                        where organic_rank is not null and h10_ppc_sugg_min_bid is not null and competing_products <=500
                     GROUP BY 
                         asin_parent
                 )
