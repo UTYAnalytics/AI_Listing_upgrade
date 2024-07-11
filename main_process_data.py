@@ -179,6 +179,7 @@ def update_keyword_auto_listing():
                         STRING_AGG(keyword_phrase, ', ') AS concatenated_keywords
                     FROM 
                         reverse_product_lookup_helium_2
+                        where organic_rank between 1 and 20
                     GROUP BY 
                         asin_parent
                 )
