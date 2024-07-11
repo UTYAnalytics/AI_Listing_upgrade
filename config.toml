@@ -37,4 +37,4 @@ password = "D8RLPA7$kxG!9zh"
 [github]
 repo = "UTYAnalytics/AI_Listing_upgrade"  # replace with your GitHub repo
 workflow_id = "main_process_data.yml"  # replace with the actual workflow ID
-branch = "main"  # branch to run the workflow on
+branch = "asin-input-only"  # branch to run the workflow on

@@ -42,5 +42,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          echo "Processing ASIN: ${{ matrix.asin }}"
-          python main_process_data.py ${{ matrix.asin }}
+          RETRIES=3
+          for i in $(seq 1 $RETRIES); do
+            echo "Attempt $i"
+            timeout 180s python main_process_data.py ${{ matrix.asin }} && break || echo "Attempt $i failed. Retrying..."
+            if [ $i -eq $RETRIES ]; then
+              echo "All attempts failed."
+              exit 1
+            fi
+          done
