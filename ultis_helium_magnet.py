@@ -209,13 +209,7 @@ def scrap_helium_keyword_3asin(
             print("Popup not found within the timeout period.")
         # driver.get_screenshot_as_file("screenshot.png")
         # Define the XPath to locate the button element
-        element_scroll = WebDriverWait(driver, 600000000).until(
-            EC.visibility_of_element_located((By.CSS_SELECTOR, ".sc-kMdmNJ"))
-        )
-        driver.execute_script("arguments[0].scrollIntoView();", element_scroll)
-
-        print("Click View Top Products")
-        time.sleep(5)
+        # Convert cm to pixels
         view_product_button_xpath = (
             '//button[@data-testid="viewproductsfrequentlyboughttogether"]'
         )
@@ -223,6 +217,14 @@ def scrap_helium_keyword_3asin(
         view_product_button_element = WebDriverWait(driver, 600000000).until(
             EC.visibility_of_element_located((By.XPATH, view_product_button_xpath))
         )
+        pixels_to_scroll = 76
+
+        # Scroll the page by the specified amount
+        driver.execute_script(f"window.scrollBy(0, {pixels_to_scroll});")
+
+
+        print("Click View Top Products")
+        time.sleep(5)
         # Click the button
         view_product_button_element.click()
 

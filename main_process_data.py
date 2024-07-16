@@ -244,9 +244,9 @@ def main(keywords):
 
 if __name__ == "__main__":
 
-    print(sys.argv[1])
-    keyword_input = sys.argv[1]
-    success, driver, result, asin_subsets, download_dir = main(keyword_input)
+    # print(sys.argv[1])
+    # keyword_input = sys.argv[1]
+    success, driver, result, asin_subsets, download_dir = main("healthy bundle")
     if success:
         output = {
             "driver": driver,
@@ -255,5 +255,5 @@ if __name__ == "__main__":
             "download_dir": download_dir,
         }
         print(json.dumps(output))  # Output the subsets as JSON
-    else:
-        sys.exit(1)
+    # else:
+    #     sys.exit(1)
