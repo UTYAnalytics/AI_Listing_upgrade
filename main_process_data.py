@@ -215,7 +215,7 @@ def update_keyword_auto_listing():
     FROM 
         keyword_phrases kp
     WHERE 
-         kp.keyword_parent = alt.asin;"""
+         kp.keyword_parent = alt.keyword;"""
         )
         # Commit the transaction
         conn.commit()
