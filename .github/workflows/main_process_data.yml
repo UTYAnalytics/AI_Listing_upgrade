@@ -10,7 +10,7 @@ on:
 jobs:
   process-keywords:
     runs-on: ubuntu-latest
-    container: utydata02/ai-listing-uty:latest
+    # container: utydata02/ai-listing-uty:latest
     strategy:
       matrix:
         keywords: ${{ fromJson(github.event.inputs.keyword_list) }}
@@ -18,75 +18,27 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v2
 
-      - name: Install jq
-        run: |
-          apt-get update
-          apt-get install -y jq
+      # - name: Install jq
+      #   run: |
+      #     apt-get update
+      #     apt-get install -y jq
 
-      - name: Set up VPN configuration
-        run: |
-          echo "${{ secrets.VPN_CONFIG }}" | base64 --decode > vpn-config.ovpn
-          echo -e "${{ secrets.VPN_USERNAME }}\n${{ secrets.VPN_PASSWORD }}" > vpn-auth.txt
+      # - name: Set up VPN configuration
+      #   run: |
+      #     echo "${{ secrets.VPN_CONFIG }}" | base64 --decode > vpn-config.ovpn
+      #     echo -e "${{ secrets.VPN_USERNAME }}\n${{ secrets.VPN_PASSWORD }}" > vpn-auth.txt
 
-      - name: Connect to VPN
-        run: |
-          openvpn --config vpn-config.ovpn --auth-user-pass vpn-auth.txt --daemon
-          sleep 5  # Wait for the VPN to establish
+      # - name: Connect to VPN
+      #   run: |
+      #     openvpn --config vpn-config.ovpn --auth-user-pass vpn-auth.txt --daemon
+      #     sleep 5  # Wait for the VPN to establish
 
-      - name: Verify VPN connection
-        run: curl ifconfig.me
+      # - name: Verify VPN connection
+      #   run: curl ifconfig.me
 
-      - name: Process Keywords with Retry
-        id: process_keyword_retry
+      - name: Process ASIN & Keyword
         env:
-          GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
+          MY_GITHUB_TOKEN : ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
-          RETRIES=3
-          for i in $(seq 1 $RETRIES); do
-            echo "Attempt $i"
-            output=$(timeout 180s python main_process_data.py ${{ matrix.keywords }}) || status=$?
-            if [ $status -eq 0 ]; then
-              echo "Attempt $i succeeded."
-              break
-            else
-              echo "Attempt $i failed with status $status. Retrying..."
-            fi
-            if [ $i -eq $RETRIES ]; then
-              echo "All attempts failed."
-              exit 1
-            fi
-          done
-          echo "Processing keyword: ${{ matrix.keywords }}"
-          echo "Output: $output"
-          result=$(echo $output | jq -c '.result')
-          asin_subsets=$(echo $output | jq -c '.asin_subsets')
-          download_dir=$(echo $output | jq -c '.download_dir')
-          echo "driver=$(echo $output | jq -c '.driver')" >> $GITHUB_OUTPUT
-          echo "result=$result" >> $GITHUB_OUTPUT
-          echo "asin_subsets=$asin_subsets" >> $GITHUB_OUTPUT
-          echo "download_dir=$download_dir" >> $GITHUB_OUTPUT
-
-      - name: Process ASINs with Retry
-        id: process_asin_retry
-        env:
-          DRIVER: ${{ steps.process_keyword_retry.outputs.driver }}
-          RESULT: ${{ steps.process_keyword_retry.outputs.result }}
-          ASIN_SUBSETS: ${{ steps.process_keyword_retry.outputs.asin_subsets }}
-          DOWNLOAD_DIR: ${{ steps.process_keyword_retry.outputs.download_dir }}
-        run: |
-          RETRIES=3
-          for i in $(seq 1 $RETRIES); do
-            echo "Attempt $i for ASINs"
-            output=$(timeout 180s python asin_main_process_data.py "${{ env.DRIVER }}" "${{ env.RESULT }}" "${{ env.ASIN_SUBSETS }}" "${{ env.DOWNLOAD_DIR }}") || status=$?
-            
-            if [ $status -eq 0 ]; then
-              echo "Attempt $i for ASINs succeeded."
-              break
-            else
-              echo "Attempt $i for ASINs failed with status $status. Retrying..."
-            fi
-            if [ $i -eq $RETRIES ]; then
-              echo "All attempts for ASINs failed."
-              exit 1
-            fi
-          done
+          echo "Processing ASIN & Keyword: ${{ matrix.keywords }}"
+          python main_process_data.py ${{ matrix.keywords }}

@@ -20,6 +20,7 @@ from ultis_helium_magnet import (
     scrap_helium_keyword_3asin,
 )
 import json
+from ultis_jungle_Scout_keyword import(keyword_to_keyword)
 
 # Initialize Supabase client
 supabase = config.supabase
@@ -79,8 +80,8 @@ def fetch_existing_relevant_asin_main(var):
         # Execute a query
         query = f"""
             SELECT DISTINCT {column_to_fetch}
-            FROM reverse_product_lookup_helium_2
-            WHERE sys_run_date = (SELECT MAX(sys_run_date) FROM reverse_product_lookup_helium_2)
+            FROM keyword_to_jungle_scount
+            WHERE sys_run_date = (SELECT MAX(sys_run_date) FROM keyword_to_jungle_scount)
         """
         cur.execute(query)
 
@@ -170,31 +171,51 @@ def update_keyword_auto_listing():
         )
         cur = conn.cursor()
         # Execute a query
+        # cur.execute(
+        #     """-- Step 1: Create a CTE to concatenate keyword phrases grouped by asin_parent
+        #         WITH keyword_phrases AS (
+        #             SELECT 
+        #                 asin_parent,
+        #                 STRING_AGG(keyword_phrase, ', ') AS concatenated_keywords
+        #             FROM 
+        #                 reverse_product_lookup_helium_2
+        #             where organic_rank between 1 and 20
+        #             GROUP BY 
+        #                 asin_parent
+        #         )
+
+        #         -- Step 2: Update the auto_listing_table with the concatenated keyword phrases using LEFT JOIN
+        #         UPDATE 
+        #             auto_listing_table alt
+        #         SET 
+        #             keyword = kp.concatenated_keywords
+        #         FROM 
+        #             keyword_phrases kp
+        #         WHERE 
+        #             alt.keyword IS NULL
+        #             AND kp.asin_parent = alt.asin;
+
+        #         """
+        # )
         cur.execute(
-            """-- Step 1: Create a CTE to concatenate keyword phrases grouped by asin_parent
-                WITH keyword_phrases AS (
-                    SELECT 
-                        asin_parent,
-                        STRING_AGG(keyword_phrase, ', ') AS concatenated_keywords
-                    FROM 
-                        reverse_product_lookup_helium_2
-                    where organic_rank between 1 and 20
-                    GROUP BY 
-                        asin_parent
-                )
-
-                -- Step 2: Update the auto_listing_table with the concatenated keyword phrases using LEFT JOIN
-                UPDATE 
-                    auto_listing_table alt
-                SET 
-                    keyword = kp.concatenated_keywords
-                FROM 
-                    keyword_phrases kp
-                WHERE 
-                    alt.keyword IS NULL
-                    AND kp.asin_parent = alt.asin;
-
-                """
+            """WITH keyword_phrases AS (
+        SELECT 
+            keyword_parent,
+            STRING_AGG(name, ', ') AS concatenated_keywords
+        FROM 
+            keyword_to_jungle_scount
+        where sys_run_date=(select max(sys_run_date) from keyword_to_jungle_scount)
+        GROUP BY 
+            keyword_parent
+    )
+    UPDATE 
+        auto_listing_table alt
+    SET 
+        keyword = kp.concatenated_keywords
+    FROM 
+        keyword_phrases kp
+    WHERE 
+         kp.keyword_parent = alt.asin;"""
         )
         # Commit the transaction
         conn.commit()
@@ -211,31 +232,22 @@ def clear_session_and_refresh(driver):
     driver.execute_script("window.sessionStorage.clear();")
 
 
-def start_driver(keyword):
+def start_driver(keywords):
     # chrome_service = Service(ChromeDriverManager().install())
-    driver = webdriver.Chrome(options=chrome_options)
-    try:
-        print("captcha_solver")
-        captcha_solver(driver, chrome_options)
-        print("process_data")
-        result = scrap_helium_keyword_3asin(driver, keyword)
-        asin_subsets = result["subsets"]
-        time.sleep(10)
-        return driver, result, asin_subsets, download_dir
-    except Exception as e:
-        print(f"An error occurred in scrap_helium_keyword_3asin: {e}")
-        traceback.print_exc()
-        raise
+    # driver = webdriver.Chrome(options=chrome_options)
+    # try:
+    print("process_data")
+    keyword_to_keyword(keywords)
+    update_keyword_auto_listing()
+    time.sleep(10)
+    # finally:
+        # driver.quit()
 
 
 def main(keywords):
     try:
-        driver, result, asin_subsets, download_dir = start_driver(keywords)
-        driver_info = {
-            "session_id": driver.session_id,
-            "executor_url": driver.command_executor._url,
-        }
-        return True, driver_info, result, asin_subsets, download_dir
+        start_driver(keywords)
+        return True
     except Exception as e:
         print(f"An error occurred: {e}")
         traceback.print_exc()
@@ -245,15 +257,7 @@ def main(keywords):
 if __name__ == "__main__":
 
     print(sys.argv[1])
-    keyword_input = sys.argv[1]
-    success, driver, result, asin_subsets, download_dir = main(keyword_input)
-    if success:
-        output = {
-            "driver": driver,
-            "result": result,
-            "asin_subsets": asin_subsets,
-            "download_dir": download_dir,
-        }
-        print(json.dumps(output))  # Output the subsets as JSON
-    else:
+    keyword_list = sys.argv[1]
+    success = main(keyword_list)
+    if not success:
         sys.exit(1)
