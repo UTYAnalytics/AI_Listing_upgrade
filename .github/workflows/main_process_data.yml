@@ -10,7 +10,7 @@ on:
 jobs:
   process-keywords:
     runs-on: ubuntu-latest
-    # container: utydata02/ai-listing-uty:latest
+    container: utydata02/ai-listing-uty:latest
     strategy:
       matrix:
         keywords: ${{ fromJson(github.event.inputs.keyword_list) }}
@@ -38,7 +38,7 @@ jobs:
 
       - name: Process ASIN & Keyword
         env:
-          MY_GITHUB_TOKEN : ${{ secrets.MY_GITHUB_TOKEN }}
+          MY_GITHUB_TOKEN: ${{ secrets.MY_GITHUB_TOKEN }}
         run: |
           echo "Processing ASIN & Keyword: ${{ matrix.keywords }}"
           python main_process_data.py ${{ matrix.keywords }}
