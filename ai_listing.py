@@ -148,7 +148,7 @@ class AILising:
                 """
                     SELECT id, sys_run_date, asin, name, customer, insert_date, keyword, pack, session_id, organic_keywords 
                     FROM auto_listing_table 
-                    WHERE session_id=%s and where title is null
+                    WHERE session_id=%s and title is null
                 """,
                 (session_id,),
             )

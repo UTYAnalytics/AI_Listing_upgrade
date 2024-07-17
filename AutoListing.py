@@ -27,7 +27,7 @@ feature_map = {
     "CUSTOMERS": "customer",
     "Asin liên quan": "asin",
     "NGÀY": "insert_date",
-    "Pack": "pack",
+    "Pack": "pack", 
     "Organic Keywords": "organic_keywords",
     "Auto Keywords": "keyword",
     "AI TITLE": "title",
