@@ -285,9 +285,12 @@ def listing(session_id):
         if not null_results:
             break
         for null_result in null_results:
-            retry_result = ai_system.process_data(session_id=session_id)
-            null_result["title"] = retry_result.get("title", null_result["title"])
-            null_result["description"] = retry_result.get("description", null_result["description"])
+            retry_result_list = ai_system.process_data(session_id=session_id)
+            # Assuming retry_result_list contains the required result
+            if retry_result_list:
+                retry_result = retry_result_list[0]  # Get the first result
+                null_result["title"] = retry_result.get("title", null_result["title"])
+                null_result["description"] = retry_result.get("description", null_result["description"])
 
         ai_system.upsert_results(null_results)
 
@@ -297,6 +300,7 @@ def listing(session_id):
         formatted_results += f"\n\nDescription: {result['description']}\n\n"
 
     return results, formatted_results
+
 
 
 
