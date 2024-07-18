@@ -204,7 +204,7 @@ def update_keyword_auto_listing():
             STRING_AGG(name, ', ') AS concatenated_keywords
         FROM 
             keyword_to_jungle_scount
-        where sys_run_date=(select max(sys_run_date) from keyword_to_jungle_scount)
+        where sys_run_date=(select max(sys_run_date) from keyword_to_jungle_scount) and relevancy_score>100
         GROUP BY 
             keyword_parent
     )
